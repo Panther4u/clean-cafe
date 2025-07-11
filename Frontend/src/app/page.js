@@ -25,12 +25,15 @@ export default function Home() {
   return (
     <>
       <div className=" w-full flex justify-center">
-        <div className="flex flex-col justify-center min-h-screen w-[414px] bg-green-500 content-center">
+      <div
+  className="flex flex-col justify-center min-h-screen w-[414px] content-center"
+  style={{ backgroundColor: "rgba(44, 0, 0, 1)" }}
+>
           <div className="flex justify-center ">
             <Image
-              src={"/./logo.svg"}
-              width={200}
-              height={200}
+              src={"/./Logo.png"}
+              width={600}
+              height={600}
               alt="coffee company logo"
               quality={100}
               unoptimized
