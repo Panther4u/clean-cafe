@@ -42,7 +42,7 @@ export const ModalCard = ({
                 {detailModal?.description}
               </div>
               <div className=" text-green-600">
-                Rs.{" "}
+              ₹{" "}
                 {detailModal?.price
                   .toString()
                   .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
