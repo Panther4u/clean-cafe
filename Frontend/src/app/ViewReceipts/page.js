@@ -6,6 +6,8 @@ import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
 export default function ViewReceipts() {
   const router = useRouter();
   const [receipts, setReceipts] = useState([]);
@@ -16,7 +18,7 @@ export default function ViewReceipts() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:4000/receipts")
+    fetch(`${API_BASE}/receipts`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setReceipts(data);
@@ -27,7 +29,7 @@ export default function ViewReceipts() {
         setLoading(false);
       });
 
-    fetch("http://localhost:4000/menu")
+    fetch(`${API_BASE}/menu`)
       .then((res) => res.json())
       .then(setMenu)
       .catch((err) => console.error("❌ Menu fetch failed:", err));
@@ -36,7 +38,7 @@ export default function ViewReceipts() {
   const deleteReceipt = async (id, billNo) => {
     if (!confirm(`Delete receipt ${billNo}?`)) return;
     try {
-      const res = await fetch(`http://localhost:4000/receipts/delete/${id}`, {
+      const res = await fetch(`${API_BASE}/receipts/delete/${id}`, {
         method: "DELETE",
       });
       const result = await res.json();
@@ -62,9 +64,8 @@ export default function ViewReceipts() {
 
   const saveEditedReceipt = async (receiptId) => {
     const updatedTotal = calculateTotal(editOrder);
-
     try {
-      const res = await fetch(`http://localhost:4000/receipts/update/${receiptId}`, {
+      const res = await fetch(`${API_BASE}/receipts/update/${receiptId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: editOrder, grandTotal: updatedTotal }),

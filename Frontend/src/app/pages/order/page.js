@@ -51,22 +51,20 @@ export default function Order() {
   const [radioChekced, setRadioChecked] = useState("gopay");
   const [done, setDone] = useState(false); //this must be for Redux, but not now
   const modalRef = useRef();
-
-  const getDataMenu = async () => {
-    try {
-      // const request = await fetch(`https://mock-server-teal.vercel.app/menu`);
-      const request = await fetch(`http://localhost:4000/menu`);
-      if (!request.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+  
+    const getDataMenu = async () => {
+      try {
+        const request = await fetch(`https://sri-kandhan-cafe.onrender.com/menu`);
+        if (!request.ok) {
+          throw new Error(`HTTP error! status: ${request.status}`);
+        }
+        const response = await request.json();
+        setItemsOrder(response);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching menu data:", error);
       }
-      const response = await request.json();
-
-      setItemsOrder(response);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+    };
 
   useEffect(() => {
     getDataMenu();

@@ -9,6 +9,8 @@ import { HiPrinter } from "react-icons/hi";
 import { useRouter } from "next/navigation"; 
 import Image from "next/image";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
 export const Done = ({ checkout, discountAmount, totalPrice }) => {
   const router = useRouter();
   const [dateOrder, setDateOrder] = useState(null);
@@ -40,7 +42,7 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
         createdAt: new Date().toISOString(),
       };
 
-      fetch("http://localhost:4000/print", {
+      fetch(`${API_BASE}/print`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
