@@ -1,250 +1,237 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AiOutlineFileDone } from "react-icons/ai";
-import { TbPlayerTrackNextFilled } from "react-icons/tb";
-import { FaRegSmileBeam } from "react-icons/fa";
+import { HiReceiptRefund, HiPencil, HiTrash, HiPrinter, HiPlus } from "react-icons/hi";
 import { motion as m } from "framer-motion";
-import { HiPrinter } from "react-icons/hi";
-import { useRouter } from "next/navigation"; 
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-export const Done = ({ checkout, discountAmount, totalPrice }) => {
+export default function ViewReceipts() {
   const router = useRouter();
-  const [dateOrder, setDateOrder] = useState(null);
-  const [numbers, setNumbers] = useState({ table: [], order: [] });
+  const [receipts, setReceipts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [editOrder, setEditOrder] = useState([]);
+  const [menu, setMenu] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const generateRandomNumbersOrder = (x) => {
-      return Array.from({ length: x }, () => Math.floor(Math.random() * 10));
-    };
+    fetch("http://localhost:4000/receipts")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setReceipts(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("❌ Failed to load receipts:", err);
+        setLoading(false);
+      });
 
-    setDateOrder(new Date());
-    setNumbers({
-      table: generateRandomNumbersOrder(2),
-      order: generateRandomNumbersOrder(6),
-    });
+    fetch("http://localhost:4000/menu")
+      .then((res) => res.json())
+      .then(setMenu)
+      .catch((err) => console.error("❌ Menu fetch failed:", err));
   }, []);
 
-  useEffect(() => {
-    if (numbers.order.length > 0 && numbers.table.length > 0 && dateOrder) {
-const payload = {
-  order: checkout.order,
-  total: totalPrice.amount,
-  discount: (discountAmount / 100) * totalPrice.amount,
-  paymentMethod: checkout.payment,
-  billNo: `#001${numbers.order.join("")}`,
-  tableNo: `#0${numbers.table.join("")}`,
-  date: dateOrder.toLocaleString("en-IN"),
-  grandTotal: totalPrice.discounted,
-  createdAt: new Date().toISOString(),
-};
-
-      fetch("http://localhost:4000/print", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-        .then((res) => res.json())
-        .then((data) => console.log("Receipt sent to printer:", data))
-        .catch((err) => console.error("Error saving/printing receipt:", err));
+  const deleteReceipt = async (id, billNo) => {
+    if (!confirm(`Delete receipt ${billNo}?`)) return;
+    try {
+      const res = await fetch(`http://localhost:4000/receipts/delete/${id}`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setReceipts((prev) => prev.filter((r) => r.id !== id));
+        alert("✅ Deleted successfully!");
+      } else {
+        alert("❌ Delete failed: " + result.error);
+      }
+    } catch (err) {
+      alert("❌ Error deleting receipt.");
     }
-  }, [numbers, dateOrder]);
+  };
 
-  if (!dateOrder) {
-    return <div className="text-center py-10">⏳ Preparing receipt...</div>;
-  }
+  const calculateTotal = (order) => {
+    return order.reduce((sum, item) => sum + item.price * item.amount, 0);
+  };
 
-  const formattedDate = dateOrder.toLocaleDateString();
-  const formattedTime = dateOrder.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const editReceipt = (receipt) => {
+    setEditingId(receipt.id);
+    setEditOrder([...receipt.order]);
+  };
 
+  const saveEditedReceipt = async (receiptId) => {
+    const updatedTotal = calculateTotal(editOrder);
+
+    try {
+      const res = await fetch(`http://localhost:4000/receipts/update/${receiptId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: editOrder, grandTotal: updatedTotal }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      alert("✅ Receipt updated!");
+      setReceipts((prev) =>
+        prev.map((r) => (r.id === receiptId ? { ...r, order: editOrder, grandTotal: updatedTotal } : r))
+      );
+      setEditingId(null);
+    } catch (err) {
+      alert("❌ Failed to save changes.");
+    }
+  };
+
+  const printReceipt = (receipt) => {
+    const printable = window.open("", "", "width=400,height=600");
+    printable.document.write(`
+      <html><head><title>Receipt ${receipt.billNo}</title></head>
+      <body><h2>Receipt ${receipt.billNo}</h2>
+      <p>Date: ${receipt.date}</p>
+      <p>Payment: ${receipt.paymentMethod}</p>
+      <p>Table: ${receipt.tableNo}</p>
+      <p>Total: ₹ ${receipt.grandTotal.toLocaleString("id-ID")}</p>
+      <hr /><ul>
+      ${receipt.order.map((item) => `<li>${item.name} × ${item.amount} — ₹${(item.price * item.amount).toLocaleString("id-ID")}</li>`).join("")}
+      </ul><hr /><p style="text-align:center;">Printed from POS System</p>
+      </body></html>`);
+    printable.document.close();
+    printable.print();
+  };
+
+  const addItemToEditOrder = (item) => {
+    const existing = editOrder.find((i) => i.name === item.name);
+    if (existing) {
+      setEditOrder((prev) =>
+        prev.map((i) => i.name === item.name ? { ...i, amount: i.amount + 1 } : i)
+      );
+    } else {
+      setEditOrder((prev) => [...prev, { ...item, amount: 1 }]);
+    }
+  };
+
+  const filteredMenu = menu.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <>
-      <title>Coffee Ordering Mobile Web by Kavi</title>
-      <div className="w-full flex justify-center font-mono">
-        <div className="flex flex-col justify-center itemsb min-h-screen w-[414px] bg-green-500 content-center overflow-hidden">
-          <div className=" flex flex-col py-8 justify-center items-center mb-9">
-            <div className="z-10 flex p-4 justify-center rounded-full bg-white hover:scale-110 active:scale-110 transition-all ">
-              <span className="absolute mt-2.5 -mr-[24px] w-3 h-3 rounded-full bg-green-400 animate-ping"></span>
-              <span className="absolute mt-3 -mr-6 w-2 h-2 rounded-full bg-green-400 "></span>
-              <AiOutlineFileDone className="flex w-16 h-16 p-3 text-white rounded-full bg-black shadow-lg" />
-            </div>
-            <div className="flex w-full justify-between bg-white h-[3px] -mt-[48px]">
-              <div className="w-2.5 h-5 rounded-r-full -mt-[9px] bg-white"></div>
-              <div className="w-2.5 h-5 rounded-l-full -mt-[9px] bg-white"></div>
-            </div>
-          </div>
-          <div className="hidden px-4 text-center justify-center items-center text-white space-x-2">
-            <span>Your order has been confirmed!</span>
-            <span>
-              {" "}
-              <FaRegSmileBeam />
-            </span>
-          </div>
-          <div className="flex mx-4 h-6 bg-black -mb-4 rounded-full"></div>
-          <div className="flex flex-col px-6 overflow-hidden">
-            <m.div
-              initial={{ y: "-100%" }}
-              animate={{ y: "0%" }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className=""
-            >
-              <div className="flex flex-col items-center justify-center p-2 text-black bg-white border">
-                <div className="flex w-full justify-center items-center py-2 font-bold font-sans text-3xl text-white bg-green-600 transition-all">
-                  <div className="flex items-center py-1 ">
-                    <div className="flex justify-center">NKC Receipt</div>
-                  </div>
-                </div>
-                <div className="w-full space-y-2">
-                  <div className="flex flex-col px-2 py-2 border-b border-slate-500">
-                    <div className="flex">
-                      <span className=" w-1/4">Bill No</span>
-                      <p className=" w-3/4">
-                        : #001
-                        {numbers?.order.map((number, idx) => (
-                          <span key={idx}>{number}</span>
-                        ))}
-                      </p>
-                    </div>
-                    <div className="flex">
-                      <span className=" w-1/4">Table</span>
-                      <p className="w-3/4">
-                        {" "}
-                        : #0
-                        {numbers?.table.map((number, idx) => (
-                          <span key={idx}>{number}</span>
-                        ))}
-                      </p>
-                    </div>
-                    <div className="flex">
-                      <span className=" w-1/4">Payment</span>
-                      <p className="w-3/4 capitalize">: {checkout.payment}</p>
-                    </div>
-                    <div className="flex">
-                      <span className=" w-1/4">Date</span>
-                      <p className=" w-3/4">
-                        : {formattedDate} | {formattedTime}
-                      </p>
-                    </div>
-                    <div className="flex">
-                      <span className=" w-1/4">On Shift</span>
-                      <p className=" w-3/4">: Sri Kandhan Cafe Team</p>
-                    </div>
-                  </div>
-<div className="flex flex-col px-2 w-full">
-  <h1 className=" pb-1 text-center">Order Items:</h1>
-  <table className="border-spacing-3 table-fixed">
-    <tbody>
-      {checkout?.order.map((data, idx) => (
-        <tr key={idx}>
-          <td className="pr-1 py-0 align-top">{data.amount}x</td>
-          <td className="pr-1 py-0">
-            <p className="py-0">{data.name}</p>
-            {data.notes !== "" && (
-              <p className="text-xs py-0">Notes: {data.notes}</p>
-            )}
-          </td>
-          <td className="align-top text-right py-0">
-            ₹{(data.price * data.amount).toFixed(2)}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
-<div className="border-b border-slate-500 my-2"></div>
-
-<div className="flex flex-col px-2 w-full">
-  <table className="w-full">
-    <tbody className="font-bold text-base">
-      <tr>
-        <td className="text-left">{checkout?.order.length} item(s)</td>
-        <td className="text-right"></td>
-      </tr>
-
-      {discountAmount !== 0 && (
-        <>
-          <tr>
-            <td>Total</td>
-            <td className="text-right">
-              ₹{totalPrice.amount.toFixed(2)}
-            </td>
-          </tr>
-          <tr className="text-green-600">
-            <td>Discount</td>
-            <td className="text-right">
-              - ₹{((discountAmount / 100) * totalPrice.amount).toFixed(2)}
-            </td>
-          </tr>
-        </>
-      )}
-
-      <tr className="text-lg border-t border-slate-300 pt-2">
-        <td>Grand Total</td>
-        <td className="text-right">
-          ₹{totalPrice.discounted.toFixed(2)}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-
-
-                  <div className="flex w-full justify-center">
-                    {"==== THANK YOU ===="}
-                  </div>
-                </div>
-              </div>
-              {/* ========= WAVE SVG ======== */}
-              <div className="text-black -mt-[14px]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-                  <path
-                    fill="white"
-                    fillOpacity="1"
-                    d="M0,288L6.2,245.3C12.3,203,25,117,37,101.3C49.2,85,62,139,74,144C86.2,149,98,107,111,96C123.1,85,135,107,148,138.7C160,171,172,213,185,229.3C196.9,245,209,235,222,202.7C233.8,171,246,117,258,106.7C270.8,96,283,128,295,154.7C307.7,181,320,203,332,218.7C344.6,235,357,245,369,218.7C381.5,192,394,128,406,117.3C418.5,107,431,149,443,144C455.4,139,468,85,480,96C492.3,107,505,181,517,208C529.2,235,542,213,554,197.3C566.2,181,578,171,591,144C603.1,117,615,75,628,80C640,85,652,139,665,181.3C676.9,224,689,256,702,229.3C713.8,203,726,117,738,122.7C750.8,128,763,224,775,250.7C787.7,277,800,235,812,192C824.6,149,837,107,849,106.7C861.5,107,874,149,886,160C898.5,171,911,149,923,149.3C935.4,149,948,171,960,181.3C972.3,192,985,192,997,208C1009.2,224,1022,256,1034,234.7C1046.2,213,1058,139,1071,144C1083.1,149,1095,235,1108,256C1120,277,1132,235,1145,202.7C1156.9,171,1169,149,1182,138.7C1193.8,128,1206,128,1218,160C1230.8,192,1243,256,1255,256C1267.7,256,1280,192,1292,149.3C1304.6,107,1317,85,1329,112C1341.5,139,1354,213,1366,213.3C1378.5,213,1391,139,1403,133.3C1415.4,128,1428,192,1434,224L1440,256L1440,0L1433.8,0C1427.7,0,1415,0,1403,0C1390.8,0,1378,0,1366,0C1353.8,0,1342,0,1329,0C1316.9,0,1305,0,1292,0C1280,0,1268,0,1255,0C1243.1,0,1231,0,1218,0C1206.2,0,1194,0,1182,0C1169.2,0,1157,0,1145,0C1132.3,0,1120,0,1108,0C1095.4,0,1083,0,1071,0C1058.5,0,1046,0,1034,0C1021.5,0,1009,0,997,0C984.6,0,972,0,960,0C947.7,0,935,0,923,0C910.8,0,898,0,886,0C873.8,0,862,0,849,0C836.9,0,825,0,812,0C800,0,788,0,775,0C763.1,0,751,0,738,0C726.2,0,714,0,702,0C689.2,0,677,0,665,0C652.3,0,640,0,628,0C615.4,0,603,0,591,0C578.5,0,566,0,554,0C541.5,0,529,0,517,0C504.6,0,492,0,480,0C467.7,0,455,0,443,0C430.8,0,418,0,406,0C393.8,0,382,0,369,0C356.9,0,345,0,332,0C320,0,308,0,295,0C283.1,0,271,0,258,0C246.2,0,234,0,222,0C209.2,0,197,0,185,0C172.3,0,160,0,148,0C135.4,0,123,0,111,0C98.5,0,86,0,74,0C61.5,0,49,0,37,0C24.6,0,12,0,6,0L0,0Z"
-                  ></path>
-                </svg>
-              </div>
-            </m.div>
-          </div>
-                    {/* ✅ Print Button */}
-        <div  className="flex justify-center py-8 -mt-7">
-          <button
-            onClick={() => window.print()}
-            className="bg-black text-white py-2 px-4 rounded flex items-center gap-2"
-          >
-            <HiPrinter className="w-5 h-5" />
-            Print
+    <div className="w-full flex justify-center font-mono bg-gray-100 min-h-screen p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-4 flex items-center gap-2">
+          <button onClick={() => router.push("/")} className="flex items-center gap-1 text-sm text-gray-600 hover:text-black transition">
+            <ArrowLeftIcon className="h-5 w-5" /> Back to Order
           </button>
         </div>
 
-<m.div
-  initial={{ y: "100%" }}
-  animate={{ y: "0%" }}
-  transition={{ duration: 0.3, ease: "easeOut" }}
-  className="flex justify-center py-8 -mt-7"
->
-  <button
-    onClick={() => router.push("/")}
- // ✅ fixed path
-    className="flex p-4 justify-center text-center font-bold font-mono text-2xl bg-black text-white active:text-gray-300 active:bg-gray-800 hover:scale-110 active:scale-110 rounded-full transition-all focus:outline-none"
-  >
-    <span className="bg-white rounded-full p-2 transition-all">
-      <TbPlayerTrackNextFilled className="h-7 w-7 text-black transition-all" />
-    </span>
-  </button>
-</m.div>
+        <h1 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <HiReceiptRefund className="text-green-600 w-6 h-6" /> All Receipts
+        </h1>
 
+        {editingId && (
+          <div className="mb-4 p-3 border rounded bg-white shadow-sm">
+            <h2 className="text-lg font-semibold mb-2">Add Item</h2>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search menu..."
+              className="w-full p-2 border rounded mb-2"
+            />
+            <ul className="max-h-40 overflow-y-auto bg-white text-black rounded-md border">
+              {filteredMenu.map((item, i) => (
+                <li
+                  key={i}
+                  onClick={() => addItemToEditOrder(item)}
+                  className="cursor-pointer px-2 py-1 hover:bg-gray-200 flex items-center gap-2"
+                >
+                  <div className="w-8 h-8 relative">
+                    <Image
+                      src={item.image || "/placeholder.png"}
+                      alt={item.name}
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm">{item.name}</span>
+                  <HiPlus className="ml-auto" />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        </div>
+        {loading ? (
+          <p className="text-center text-gray-500">Loading receipts...</p>
+        ) : receipts.length === 0 ? (
+          <p className="text-center text-gray-500">No receipts found.</p>
+        ) : (
+          receipts.map((receipt, idx) => (
+            <m.div
+              key={idx}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.1 }}
+              className="bg-white p-4 rounded-lg shadow-md mb-4"
+            >
+              <div className="bg-green-600 text-white font-bold text-center rounded px-2 py-1 mb-3">
+                Receipt #{receipt.billNo}
+              </div>
+
+              <div className="text-sm text-gray-800 space-y-1">
+                <p><strong>📅 Date:</strong> {receipt.date}</p>
+                <p><strong>💳 Payment:</strong> {receipt.paymentMethod}</p>
+                <p><strong>🍽️ Table:</strong> {receipt.tableNo}</p>
+                <p><strong>💰 Total:</strong> ₹ {receipt.grandTotal.toLocaleString("id-ID")}</p>
+              </div>
+
+              <div className="mt-3">
+                <p className="font-semibold">🧃 Items:</p>
+                <ul className="text-sm text-gray-700 list-disc list-inside">
+                  {(editingId === receipt.id ? editOrder : receipt.order)?.map((item, itemIdx) => (
+                    <li key={itemIdx}>
+                      {item.name} × {item.amount}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                {editingId === receipt.id ? (
+                  <>
+                    <button
+                      onClick={() => saveEditedReceipt(receipt.id)}
+                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >Save</button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                    >Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => editReceipt(receipt)}
+                      className="flex items-center px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                    >
+                      <HiPencil className="mr-1" /> Edit
+                    </button>
+                    <button
+                      onClick={() => deleteReceipt(receipt.id, receipt.billNo)}
+                      className="flex items-center px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      <HiTrash className="mr-1" /> Delete
+                    </button>
+                    <button
+                      onClick={() => printReceipt(receipt)}
+                      className="flex items-center px-3 py-1 bg-black text-white rounded hover:bg-gray-800"
+                    >
+                      <HiPrinter className="mr-1" /> Print
+                    </button>
+                  </>
+                )}
+              </div>
+            </m.div>
+          ))
+        )}
       </div>
-    </>
+    </div>
   );
-};
+}
