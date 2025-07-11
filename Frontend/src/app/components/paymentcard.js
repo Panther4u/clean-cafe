@@ -43,7 +43,7 @@ export const PaymentCard = ({
           <div className="flex justify-between">
             <h1>Price ({totalPrice.length} item{totalPrice.length > 1 ? "s" : ""})</h1>
             <h1>
-              Rs{" "}
+            ₹{" "}
               {totalPrice.amount
                 .toString()
                 .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
@@ -53,7 +53,7 @@ export const PaymentCard = ({
             <div className="flex justify-between font-bold text-green-800">
               <h1>Discount ({discountAmount}%)</h1>
               <h1>
-                - Rs{" "}
+                - ₹{" "}
                 {((discountAmount / 100) * totalPrice.amount)
                   .toString()
                   .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
@@ -62,17 +62,17 @@ export const PaymentCard = ({
           )}
           <div className="flex justify-between">
             <h1>Tax (included)</h1>
-            <h1>Rs 0</h1>
+            <h1>₹ 0</h1>
           </div>
           <div className="flex justify-between">
             <h1>Service charge (free)</h1>
-            <h1>Rs 0</h1>
+            <h1>₹ 0</h1>
           </div>
         </div>
         <div className="flex justify-between pt-3 font-bold">
           <h1>Total Payment</h1>
           <h1>
-            Rs{" "}
+          ₹{" "}
             {totalPrice.discounted
               .toString()
               .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
