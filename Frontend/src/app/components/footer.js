@@ -43,7 +43,7 @@ export const Footer = ({ onClick, totalPrice, page }) => {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="text-white"
             >
-              Total Rs{" "}
+              Total  ₹{" "}
               {totalPrice.amount
                 .toString()
                 .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
