@@ -23,7 +23,7 @@ export const OrderCart = ({ itemsOrder, minusButtonHandler, plusButtonHandler, s
                   <p className="">{data.name}</p>
                 </div>
                 <div className="flex text-green-600 font-semibold">
-                  Rp {total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                ₹ {total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                 </div>
                 {data.notes !== "" && (
                   <div className="flex text-sm">
