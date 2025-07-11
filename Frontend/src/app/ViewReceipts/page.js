@@ -1,13 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { HiReceiptRefund, HiPencil, HiTrash, HiPrinter, HiPlus } from "react-icons/hi";
+import {
+  HiReceiptRefund,
+  HiPencil,
+  HiTrash,
+  HiPrinter,
+  HiPlus,
+} from "react-icons/hi";
 import { motion as m } from "framer-motion";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://sri-kandhan-cafe.onrender.com";
-
+// ✅ Fallback if env isn't available in development
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 
 export default function ViewReceipts() {
   const router = useRouter();
@@ -74,7 +80,11 @@ export default function ViewReceipts() {
       if (!res.ok) throw new Error("Update failed");
       alert("✅ Receipt updated!");
       setReceipts((prev) =>
-        prev.map((r) => (r.id === receiptId ? { ...r, order: editOrder, grandTotal: updatedTotal } : r))
+        prev.map((r) =>
+          r.id === receiptId
+            ? { ...r, order: editOrder, grandTotal: updatedTotal }
+            : r
+        )
       );
       setEditingId(null);
     } catch (err) {
@@ -93,7 +103,14 @@ export default function ViewReceipts() {
       <p>Table: ${receipt.tableNo}</p>
       <p>Total: ₹ ${receipt.grandTotal.toLocaleString("id-ID")}</p>
       <hr /><ul>
-      ${receipt.order.map((item) => `<li>${item.name} × ${item.amount} — ₹${(item.price * item.amount).toLocaleString("id-ID")}</li>`).join("")}
+      ${receipt.order
+        .map(
+          (item) =>
+            `<li>${item.name} × ${item.amount} — ₹${(
+              item.price * item.amount
+            ).toLocaleString("id-ID")}</li>`
+        )
+        .join("")}
       </ul><hr /><p style="text-align:center;">Printed from POS System</p>
       </body></html>`);
     printable.document.close();
@@ -104,7 +121,9 @@ export default function ViewReceipts() {
     const existing = editOrder.find((i) => i.name === item.name);
     if (existing) {
       setEditOrder((prev) =>
-        prev.map((i) => i.name === item.name ? { ...i, amount: i.amount + 1 } : i)
+        prev.map((i) =>
+          i.name === item.name ? { ...i, amount: i.amount + 1 } : i
+        )
       );
     } else {
       setEditOrder((prev) => [...prev, { ...item, amount: 1 }]);
@@ -119,7 +138,10 @@ export default function ViewReceipts() {
     <div className="w-full flex justify-center font-mono bg-white min-h-screen p-4">
       <div className="w-full max-w-md">
         <div className="mb-4 flex items-center gap-2">
-          <button onClick={() => router.push("/")} className="flex items-center gap-1 text-sm text-gray-600 hover:text-black transition">
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-1 text-sm text-gray-600 hover:text-black transition"
+          >
             <ArrowLeftIcon className="h-5 w-5" /> Back to Order
           </button>
         </div>
@@ -154,7 +176,9 @@ export default function ViewReceipts() {
                     />
                   </div>
                   <span className="text-sm font-medium">{item.name}</span>
-                  <span className="ml-auto text-sm text-gray-600">₹{item.price}</span>
+                  <span className="ml-auto text-sm text-gray-600">
+                    ₹{item.price}
+                  </span>
                   <HiPlus className="text-gray-700" />
                 </li>
               ))}
@@ -180,21 +204,39 @@ export default function ViewReceipts() {
               </div>
 
               <div className="text-sm text-gray-800 space-y-1">
-                <p><strong>📅 Date:</strong> {receipt.date}</p>
-                <p><strong>💳 Payment:</strong> {receipt.paymentMethod}</p>
-                <p><strong>🍽️ Table:</strong> {receipt.tableNo}</p>
-                <p><strong>💰 Total:</strong> ₹ {receipt.grandTotal.toLocaleString("id-ID")}</p>
+                <p>
+                  <strong>📅 Date:</strong> {receipt.date}
+                </p>
+                <p>
+                  <strong>💳 Payment:</strong> {receipt.paymentMethod}
+                </p>
+                <p>
+                  <strong>🍽️ Table:</strong> {receipt.tableNo}
+                </p>
+                <p>
+                  <strong>💰 Total:</strong> ₹{" "}
+                  {receipt.grandTotal.toLocaleString("id-ID")}
+                </p>
               </div>
 
               <div className="mt-3">
                 <p className="font-semibold">🧃 Items:</p>
                 <ul className="text-sm text-gray-700 list-disc list-inside">
-                  {(editingId === receipt.id ? editOrder : receipt.order)?.map((item, itemIdx) => (
-                    <li key={itemIdx} className="flex justify-between items-center">
-                      <span>{item.name} × {item.amount}</span>
-                      <span className="text-gray-500 text-xs">₹{(item.price * item.amount).toFixed(2)}</span>
-                    </li>
-                  ))}
+                  {(editingId === receipt.id ? editOrder : receipt.order)?.map(
+                    (item, itemIdx) => (
+                      <li
+                        key={itemIdx}
+                        className="flex justify-between items-center"
+                      >
+                        <span>
+                          {item.name} × {item.amount}
+                        </span>
+                        <span className="text-gray-500 text-xs">
+                          ₹{(item.price * item.amount).toFixed(2)}
+                        </span>
+                      </li>
+                    )
+                  )}
                 </ul>
               </div>
 
@@ -204,11 +246,15 @@ export default function ViewReceipts() {
                     <button
                       onClick={() => saveEditedReceipt(receipt.id)}
                       className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                    >Save</button>
+                    >
+                      Save
+                    </button>
                     <button
                       onClick={() => setEditingId(null)}
                       className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
-                    >Cancel</button>
+                    >
+                      Cancel
+                    </button>
                   </>
                 ) : (
                   <>
