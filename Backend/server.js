@@ -1,20 +1,28 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+require("dotenv").config(); // Load .env
 
 // Firebase Admin
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
-const serviceAccount = require("./serviceAccountKey.json");
+
+// Load service account from .env
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+} catch (error) {
+  console.error("❌ Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON from .env");
+  process.exit(1);
+}
 
 initializeApp({
   credential: cert(serviceAccount),
 });
 
 const db = getFirestore();
-
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -45,11 +53,16 @@ app.post("/print", async (req, res) => {
 // =============================
 app.get("/receipts", async (req, res) => {
   try {
-    const snapshot = await db.collection("receipts").orderBy("createdAt", "desc").get();
+    const snapshot = await db
+      .collection("receipts")
+      .orderBy("createdAt", "desc")
+      .get();
+
     const receipts = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
     res.json(receipts);
   } catch (err) {
     console.error("❌ Failed to fetch receipts:", err);
@@ -71,8 +84,9 @@ app.delete("/receipts/delete/:id", async (req, res) => {
   }
 });
 
-
-// Update a receipt by ID
+// =============================
+// ✅ Update a receipt by ID
+// =============================
 app.put("/receipts/update/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -90,7 +104,7 @@ app.put("/receipts/update/:id", async (req, res) => {
 // =============================
 // ✅ Serve menu from static file
 // =============================
-const menuData = require("./menu.json"); // Must exist!
+const menuData = require("./menu.json");
 app.get("/menu", (req, res) => {
   res.json(menuData.menu || []);
 });
