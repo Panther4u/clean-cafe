@@ -25,7 +25,7 @@ export default function ViewReceipts() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch(`${API_BASE}/receipts`)
+    fetch(`https://sri-kandhan-cafe.onrender.com/receipts`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setReceipts(data);
@@ -45,7 +45,7 @@ export default function ViewReceipts() {
   const deleteReceipt = async (id, billNo) => {
     if (!confirm(`Delete receipt ${billNo}?`)) return;
     try {
-      const res = await fetch(`${API_BASE}/receipts/delete/${id}`, {
+      const res = await fetch(`https://sri-kandhan-cafe.onrender.com/receipts/delete/${id}`, {
         method: "DELETE",
       });
       const result = await res.json();
@@ -72,7 +72,7 @@ export default function ViewReceipts() {
   const saveEditedReceipt = async (receiptId) => {
     const updatedTotal = calculateTotal(editOrder);
     try {
-      const res = await fetch(`${API_BASE}/receipts/update/${receiptId}`, {
+      const res = await fetch(`https://sri-kandhan-cafe.onrender.com/receipts/update/${receiptId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: editOrder, grandTotal: updatedTotal }),
