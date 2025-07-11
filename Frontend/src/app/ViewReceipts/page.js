@@ -15,7 +15,7 @@ import Image from "next/image";
 // ✅ Fallback if env isn't available in development
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 
-export default function ViewReceipts() {
+export default function viewreceipts() {
   const router = useRouter();
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
