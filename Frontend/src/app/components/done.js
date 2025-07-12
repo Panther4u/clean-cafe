@@ -462,6 +462,7 @@
 //   );
 // };
 
+// ✅ React Frontend Component (Done.js)
 "use client";
 import { useEffect, useState } from "react";
 import { HiPrinter } from "react-icons/hi";
@@ -474,50 +475,40 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 export const Done = ({ checkout, discountAmount, totalPrice }) => {
   const router = useRouter();
   const [dateOrder, setDateOrder] = useState(null);
-  const [numbers, setNumbers] = useState({ table: [], order: [] });
+  const [billNo, setBillNo] = useState(null);
 
   useEffect(() => {
-    const generateRandomNumbersOrder = (x) =>
-      Array.from({ length: x }, () => Math.floor(Math.random() * 10));
-    setDateOrder(new Date());
-    setNumbers({
-      table: generateRandomNumbersOrder(2),
-      order: generateRandomNumbersOrder(6),
-    });
+    const now = new Date();
+    setDateOrder(now);
+
+    const payload = {
+      order: checkout.order,
+      total: totalPrice.amount,
+      discount: (discountAmount / 100) * totalPrice.amount,
+      paymentMethod: checkout.payment,
+      date: now.toLocaleString("en-IN"),
+      grandTotal: totalPrice.discounted,
+    };
+
+    fetch(`${API_BASE}/print`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setBillNo(data.billNo);
+        console.log("✅ Receipt sent to printer:", data);
+      })
+      .catch((err) => console.error("❌ Error printing receipt:", err));
   }, []);
 
-  useEffect(() => {
-    if (numbers.order.length && numbers.table.length && dateOrder) {
-      const payload = {
-        order: checkout.order,
-        total: totalPrice.amount,
-        discount: (discountAmount / 100) * totalPrice.amount,
-        paymentMethod: checkout.payment,
-        billNo: `#001${numbers.order.join("")}`,
-        tableNo: `#0${numbers.table.join("")}`,
-        date: dateOrder.toLocaleString("en-IN"),
-        grandTotal: totalPrice.discounted,
-        createdAt: new Date().toISOString(),
-      };
-
-      fetch(`${API_BASE}/print`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-        .then((res) => res.json())
-        .then((data) => console.log("Receipt sent to printer:", data))
-        .catch((err) => console.error("Error saving/printing receipt:", err));
-    }
-  }, [numbers, dateOrder]);
-
-  // 🔁 Auto trigger print
   useEffect(() => {
     const timeout = setTimeout(() => window.print(), 1000);
     return () => clearTimeout(timeout);
   }, []);
 
-  if (!dateOrder)
+  if (!dateOrder || !billNo)
     return <div className="text-center py-10">⏳ Preparing receipt...</div>;
 
   const formattedDate = dateOrder.toLocaleDateString("en-IN");
@@ -528,53 +519,20 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
 
   return (
     <>
-      {/* ✅ PRINT STYLES */}
-<style>{`
-  @media print {
-    @page {
-      size: 80mm auto; /* ✅ 80mm width, auto height */
-      margin: 0;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: white;
-    }
-
-    .receipt {
-      width: 72mm; /* Printable width inside 80mm roll */
-      font-size: 12px;
-      margin: 0 auto;
-    }
-
-    .receipt * {
-      background: white !important;
-      color: black !important;
-      box-shadow: none !important;
-    }
-
-    .no-print {
-      display: none !important;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    td, th {
-      padding: 2px 0;
-      font-size: 12px;
-      line-height: 1.2;
-    }
-  }
-`}</style>
-
+      <style>{`
+      @media print {
+        @page { size: 80mm auto; margin: 0; }
+        html, body { margin: 0; padding: 0; background: white; }
+        .receipt { width: 72mm; font-size: 12px; margin: 0 auto; }
+        .receipt * { background: white !important; color: black !important; box-shadow: none !important; }
+        .no-print { display: none !important; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 2px 0; font-size: 12px; line-height: 1.2; }
+      }
+      `}</style>
 
       <div className="flex justify-center font-mono">
         <div className="receipt bg-white text-black">
-          {/* ✅ Header */}
           <div className="flex justify-center py-2">
             <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center">
               <Image src="/Logo.png" width={80} height={80} alt="Logo" />
@@ -589,15 +547,10 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
             <p>GSTIN : 33GGTPS6619J1ZJ</p>
           </div>
 
-          {/* ✅ Details */}
           <div className="px-2 mt-2 text-sm">
             <div className="flex justify-between">
               <span>Bill No:</span>
-              <span>#001{numbers.order.join("")}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Table:</span>
-              <span>#0{numbers.table.join("")}</span>
+              <span>{billNo}</span>
             </div>
             <div className="flex justify-between">
               <span>Payment:</span>
@@ -608,14 +561,13 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
               <span>{formattedDate} | {formattedTime}</span>
             </div>
             <div className="flex justify-between">
-              <span>On Shift:</span>
-              <span>Sri Kandhan Cafe Team</span>
+              <span>Counter:</span>
+              <span>01</span>
             </div>
           </div>
 
           <div className="border-t border-black my-2" />
 
-          {/* ✅ Items */}
           <div className="px-2 text-sm">
             <p className="text-center font-semibold mb-1">Order Items</p>
             <table>
@@ -627,9 +579,7 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
                         <p className="text-xs">Note: {item.notes}</p>
                       )}
                     </td>
-                    <td className="w-1/4 text-right align-top">
-                      {item.amount}x
-                    </td>
+                    <td className="w-1/4 text-right align-top">{item.amount}x</td>
                     <td className="w-1/4 text-right align-top">
                       ₹{(item.price * item.amount).toFixed(2)}
                     </td>
@@ -641,7 +591,6 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
 
           <div className="border-t border-black my-2" />
 
-          {/* ✅ Totals */}
           <div className="px-2 text-sm">
             <table className="w-full font-semibold">
               <tbody>
@@ -659,35 +608,29 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
                 )}
                 <tr className="border-t border-black">
                   <td>Grand Total</td>
-                  <td className="text-right">
-                    ₹{totalPrice.discounted.toFixed(2)}
-                  </td>
+                  <td className="text-right">₹{totalPrice.discounted.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* ✅ Footer */}
           <div className="text-center font-bold text-sm py-2">
             ==== THANK YOU ====
           </div>
 
-          {/* 🚫 Buttons hidden in print */}
           <div className="no-print flex justify-center gap-4 py-4">
             <button
               onClick={() => window.print()}
               className="bg-black text-white px-4 py-1 rounded flex items-center gap-1"
             >
-              <HiPrinter className="h-5 w-5" />
-              Print
+              <HiPrinter className="h-5 w-5" /> Print
             </button>
 
             <button
               onClick={() => router.push("/")}
               className="bg-black text-white px-4 py-1 rounded flex items-center gap-1"
             >
-              <TbPlayerTrackNextFilled className="h-5 w-5" />
-              New Order
+              <TbPlayerTrackNextFilled className="h-5 w-5" /> New Order
             </button>
           </div>
         </div>
@@ -695,4 +638,3 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
     </>
   );
 };
-

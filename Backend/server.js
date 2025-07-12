@@ -115,7 +115,6 @@
 // app.listen(PORT, () => {
 //   console.log(`🚀 Server running at http://localhost:${PORT}`);
 // });
-
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -133,23 +132,44 @@ try {
 }
 
 initializeApp({ credential: cert(serviceAccount) });
-
 const db = getFirestore();
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Save Receipt
+// ✅ Save Receipt with auto-incremented bill number
 app.post("/print", async (req, res) => {
   try {
     const data = req.body;
-    const createdAt = new Date().toISOString();
+    const now = new Date();
 
-    const result = await db.collection("receipts").add({ ...data, createdAt });
-    console.log("✅ Receipt saved with ID:", result.id);
-    res.json({ status: "success", saved: true, id: result.id });
+    // 🔁 Firestore Counter Logic
+    const counterRef = db.collection("meta").doc("counter");
+
+    const newBillNo = await db.runTransaction(async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
+      let current = 1000000;
+      if (counterDoc.exists) {
+        current = counterDoc.data().billNumber || current;
+      }
+      const next = current + 1;
+      transaction.set(counterRef, { billNumber: next });
+      return next;
+    });
+
+    const receipt = {
+      ...data,
+      billNo: `#${newBillNo}`,
+      createdAt: now.toISOString(),
+    };
+
+    const savedDoc = await db.collection("receipts").add(receipt);
+
+    console.log("✅ Receipt saved with ID:", savedDoc.id);
+    res.json({ status: "success", saved: true, id: savedDoc.id, billNo: `#${newBillNo}` });
   } catch (err) {
     console.error("❌ Error saving receipt:", err);
     res.status(500).json({ error: "Failed to save receipt" });
@@ -159,11 +179,8 @@ app.post("/print", async (req, res) => {
 // ✅ Get All Receipts
 app.get("/receipts", async (req, res) => {
   try {
-    const snapshot = await db
-      .collection("receipts")
-      .orderBy("createdAt", "desc")
-      .get();
-    const receipts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await db.collection("receipts").orderBy("createdAt", "desc").get();
+    const receipts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(receipts);
   } catch (err) {
     console.error("❌ Failed to fetch receipts:", err);
@@ -186,8 +203,7 @@ app.delete("/receipts/delete/:id", async (req, res) => {
 // ✅ Update Receipt
 app.put("/receipts/update/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    await db.collection("receipts").doc(id).update(req.body);
+    await db.collection("receipts").doc(req.params.id).update(req.body);
     res.json({ updated: true });
   } catch (err) {
     console.error("❌ Error updating receipt:", err);
@@ -195,13 +211,13 @@ app.put("/receipts/update/:id", async (req, res) => {
   }
 });
 
-// ✅ Serve Menu
-const menuData = require("./menu.json");
+// ✅ Serve Menu JSON
+const menuData = require("./menu.json"); // your static menu file
 app.get("/menu", (req, res) => {
   res.json(menuData.menu || []);
 });
 
-// ✅ Admin Login Route
+// ✅ Admin Login
 app.post("/admin/login", (req, res) => {
   const { id, password } = req.body;
   const ADMIN_ID = process.env.ADMIN_ID || "admin";
@@ -214,6 +230,7 @@ app.post("/admin/login", (req, res) => {
   }
 });
 
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
