@@ -115,6 +115,8 @@
 // app.listen(PORT, () => {
 //   console.log(`🚀 Server running at http://localhost:${PORT}`);
 // });
+
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -140,18 +142,44 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Save Receipt with auto-incremented bill number starting at #01
+// ✅ Save Receipt with auto-incremented bill number and duplicate check
 app.post("/print", async (req, res) => {
   try {
     const data = req.body;
     const now = new Date();
+    const today = now.toISOString().split("T")[0]; // e.g., "2025-07-12"
 
-    // 🔁 Firestore Counter Logic
+    // 🔍 Check for duplicate (same order, total, payment method, today)
+    const snapshot = await db
+      .collection("receipts")
+      .where("total", "==", data.total)
+      .where("grandTotal", "==", data.grandTotal)
+      .where("paymentMethod", "==", data.paymentMethod)
+      .get();
+
+    const isDuplicate = snapshot.docs.find((doc) => {
+      const docData = doc.data();
+      return (
+        JSON.stringify(docData.order) === JSON.stringify(data.order) &&
+        docData.date?.startsWith(today)
+      );
+    });
+
+    if (isDuplicate) {
+      console.log("⚠️ Duplicate receipt detected. Skipping save.");
+      return res.json({
+        status: "duplicate",
+        saved: false,
+        id: isDuplicate.id,
+        billNo: isDuplicate.data().billNo,
+      });
+    }
+
+    // 🔁 Increment and generate new bill number
     const counterRef = db.collection("meta").doc("counter");
-
     const newBillNo = await db.runTransaction(async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
-      let current = 1; // start from 1 (not 01)
+      let current = 1;
       if (counterDoc.exists) {
         current = counterDoc.data().billNumber || current;
       }
@@ -160,7 +188,7 @@ app.post("/print", async (req, res) => {
       return next;
     });
 
-    const formattedBillNo = `#${String(newBillNo).padStart(2, "0")}`; // ➜ "#01", "#02", etc.
+    const formattedBillNo = `#${String(newBillNo).padStart(2, "0")}`;
 
     const receipt = {
       ...data,
@@ -183,12 +211,17 @@ app.post("/print", async (req, res) => {
   }
 });
 
-
-// ✅ Get All Receipts
+// ✅ Get all receipts
 app.get("/receipts", async (req, res) => {
   try {
-    const snapshot = await db.collection("receipts").orderBy("createdAt", "desc").get();
-    const receipts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await db
+      .collection("receipts")
+      .orderBy("createdAt", "desc")
+      .get();
+    const receipts = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     res.json(receipts);
   } catch (err) {
     console.error("❌ Failed to fetch receipts:", err);
@@ -196,7 +229,7 @@ app.get("/receipts", async (req, res) => {
   }
 });
 
-// ✅ Delete Receipt
+// ✅ Delete receipt
 app.delete("/receipts/delete/:id", async (req, res) => {
   try {
     await db.collection("receipts").doc(req.params.id).delete();
@@ -208,7 +241,7 @@ app.delete("/receipts/delete/:id", async (req, res) => {
   }
 });
 
-// ✅ Update Receipt
+// ✅ Update receipt
 app.put("/receipts/update/:id", async (req, res) => {
   try {
     await db.collection("receipts").doc(req.params.id).update(req.body);
@@ -219,13 +252,13 @@ app.put("/receipts/update/:id", async (req, res) => {
   }
 });
 
-// ✅ Serve Menu JSON
-const menuData = require("./menu.json"); // your static menu file
+// ✅ Serve static menu
+const menuData = require("./menu.json");
 app.get("/menu", (req, res) => {
   res.json(menuData.menu || []);
 });
 
-// ✅ Admin Login
+// ✅ Admin login
 app.post("/admin/login", (req, res) => {
   const { id, password } = req.body;
   const ADMIN_ID = process.env.ADMIN_ID || "admin";

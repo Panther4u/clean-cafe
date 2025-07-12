@@ -463,21 +463,19 @@
 // };
 
 
-
-// ✅ React Frontend Component (Done.js)
 "use client";
+
 import { useEffect, useState } from "react";
 import { HiPrinter } from "react-icons/hi";
 import { TbPlayerTrackNextFilled } from "react-icons/tb";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
-export const Done = ({ checkout, discountAmount, totalPrice }) => {
-  const router = useRouter();
+export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
   const [dateOrder, setDateOrder] = useState(null);
   const [billNo, setBillNo] = useState(null);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -499,15 +497,16 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
     })
       .then((res) => res.json())
       .then((data) => {
-        setBillNo(data.billNo);
-        console.log("✅ Receipt sent to printer:", data);
+        if (data.status === "duplicate") {
+          setIsDuplicate(true);
+          setBillNo(data.billNo);
+          console.warn("⚠️ Duplicate receipt skipped:", data);
+        } else {
+          setBillNo(data.billNo);
+          console.log("✅ Receipt saved:", data);
+        }
       })
-      .catch((err) => console.error("❌ Error printing receipt:", err));
-  }, []);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => window.print(), 1000);
-    return () => clearTimeout(timeout);
+      .catch((err) => console.error("❌ Error saving receipt:", err));
   }, []);
 
   if (!dateOrder || !billNo)
@@ -522,15 +521,15 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
   return (
     <>
       <style>{`
-      @media print {
-        @page { size: 80mm auto; margin: 0; }
-        html, body { margin: 0; padding: 0; background: white; }
-        .receipt { width: 72mm; font-size: 12px; margin: 0 auto; }
-        .receipt * { background: white !important; color: black !important; box-shadow: none !important; }
-        .no-print { display: none !important; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 2px 0; font-size: 12px; line-height: 1.2; }
-      }
+        @media print {
+          @page { size: 80mm auto; margin: 0; }
+          html, body { margin: 0; padding: 0; background: white; }
+          .receipt { width: 72mm; font-size: 12px; margin: 0 auto; }
+          .receipt * { background: white !important; color: black !important; box-shadow: none !important; }
+          .no-print { display: none !important; }
+          table { width: 100%; border-collapse: collapse; }
+          td, th { padding: 2px 0; font-size: 12px; line-height: 1.2; }
+        }
       `}</style>
 
       <div className="flex justify-center font-mono">
@@ -576,7 +575,8 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
               <tbody>
                 {checkout?.order.map((item, idx) => (
                   <tr key={idx}>
-                    <td className="w-1/2 align-top">{item.name}
+                    <td className="w-1/2 align-top">
+                      {item.name}
                       {item.notes && (
                         <p className="text-xs">Note: {item.notes}</p>
                       )}
@@ -620,16 +620,26 @@ export const Done = ({ checkout, discountAmount, totalPrice }) => {
             ==== THANK YOU ====
           </div>
 
+          {isDuplicate && (
+            <div className="text-center text-xs text-red-600 pb-2">
+              ⚠️ This receipt was already saved earlier.
+            </div>
+          )}
+
           <div className="no-print flex justify-center gap-4 py-4">
             <button
               onClick={() => window.print()}
               className="bg-black text-white px-4 py-1 rounded flex items-center gap-1"
+              disabled={isDuplicate}
+              title={isDuplicate ? "Duplicate receipt cannot be reprinted" : "Print Receipt"}
             >
               <HiPrinter className="h-5 w-5" /> Print
             </button>
 
             <button
-              onClick={() => router.push("/")}
+              onClick={() => {
+                if (typeof onNewOrder === "function") onNewOrder();
+              }}
               className="bg-black text-white px-4 py-1 rounded flex items-center gap-1"
             >
               <TbPlayerTrackNextFilled className="h-5 w-5" /> New Order
