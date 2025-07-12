@@ -140,7 +140,7 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Save Receipt with auto-incremented bill number
+// ✅ Save Receipt with auto-incremented bill number starting at #01
 app.post("/print", async (req, res) => {
   try {
     const data = req.body;
@@ -151,7 +151,7 @@ app.post("/print", async (req, res) => {
 
     const newBillNo = await db.runTransaction(async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
-      let current = 1000000;
+      let current = 1; // start from 1 (not 01)
       if (counterDoc.exists) {
         current = counterDoc.data().billNumber || current;
       }
@@ -160,21 +160,29 @@ app.post("/print", async (req, res) => {
       return next;
     });
 
+    const formattedBillNo = `#${String(newBillNo).padStart(2, "0")}`; // ➜ "#01", "#02", etc.
+
     const receipt = {
       ...data,
-      billNo: `#${newBillNo}`,
+      billNo: formattedBillNo,
       createdAt: now.toISOString(),
     };
 
     const savedDoc = await db.collection("receipts").add(receipt);
 
     console.log("✅ Receipt saved with ID:", savedDoc.id);
-    res.json({ status: "success", saved: true, id: savedDoc.id, billNo: `#${newBillNo}` });
+    res.json({
+      status: "success",
+      saved: true,
+      id: savedDoc.id,
+      billNo: formattedBillNo,
+    });
   } catch (err) {
     console.error("❌ Error saving receipt:", err);
     res.status(500).json({ error: "Failed to save receipt" });
   }
 });
+
 
 // ✅ Get All Receipts
 app.get("/receipts", async (req, res) => {
