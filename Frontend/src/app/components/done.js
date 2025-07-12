@@ -188,7 +188,7 @@
 //   );
 // };
 
-// "use client";
+// // "use client";
 // import { useEffect, useState } from "react";
 // import { AiOutlineFileDone } from "react-icons/ai";
 // import { TbPlayerTrackNextFilled } from "react-icons/tb";
@@ -466,48 +466,60 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HiPrinter } from "react-icons/hi";
+import { AiOutlineFileDone } from "react-icons/ai";
 import { TbPlayerTrackNextFilled } from "react-icons/tb";
+import { FaRegSmileBeam } from "react-icons/fa";
+import { motion as m } from "framer-motion";
+import { HiPrinter } from "react-icons/hi";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
+  const router = useRouter();
   const [dateOrder, setDateOrder] = useState(null);
-  const [billNo, setBillNo] = useState(null);
-  const [isDuplicate, setIsDuplicate] = useState(false);
+  const [numbers, setNumbers] = useState({ table: [], order: [] });
 
   useEffect(() => {
-    const now = new Date();
-    setDateOrder(now);
+    const generateRandomNumbersOrder = (x) =>
+      Array.from({ length: x }, () => Math.floor(Math.random() * 10));
 
-    const payload = {
-      order: checkout.order,
-      total: totalPrice.amount,
-      discount: (discountAmount / 100) * totalPrice.amount,
-      paymentMethod: checkout.payment,
-      date: now.toLocaleString("en-IN"),
-      grandTotal: totalPrice.discounted,
-    };
-
-    fetch(`${API_BASE}/print`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "duplicate") {
-          setIsDuplicate(true);
-          setBillNo(data.billNo);
-          console.warn("⚠️ Duplicate receipt skipped:", data);
-        } else {
-          setBillNo(data.billNo);
-          console.log("✅ Receipt saved:", data);
-        }
-      })
-      .catch((err) => console.error("❌ Error saving receipt:", err));
+    setDateOrder(new Date());
+    setNumbers({
+      table: generateRandomNumbersOrder(2),
+      order: generateRandomNumbersOrder(6),
+    });
   }, []);
+
+  const billNo = `#001${numbers.order.join("")}`;
+  const tableNo = `#0${numbers.table.join("")}`;
+
+  useEffect(() => {
+    if (numbers.order.length > 0 && numbers.table.length > 0 && dateOrder) {
+      const payload = {
+        order: checkout.order,
+        total: totalPrice.amount,
+        discount: (discountAmount / 100) * totalPrice.amount,
+        paymentMethod: checkout.payment,
+        billNo,
+        tableNo,
+        date: dateOrder.toLocaleString("en-IN"),
+        grandTotal: totalPrice.discounted,
+        createdAt: new Date().toISOString(),
+      };
+
+      // 🔄 Save to backend (can be extended to save twice)
+      fetch(`${API_BASE}/print`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => console.log("Receipt sent to printer:", data))
+        .catch((err) => console.error("Error saving/printing receipt:", err));
+    }
+  }, [numbers, dateOrder]);
 
   if (!dateOrder || !billNo)
     return <div className="text-center py-10">⏳ Preparing receipt...</div>;
@@ -559,7 +571,9 @@ export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
             </div>
             <div className="flex justify-between">
               <span>Date:</span>
-              <span>{formattedDate} | {formattedTime}</span>
+              <span>
+                {formattedDate} | {formattedTime}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Counter:</span>
@@ -610,7 +624,9 @@ export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
                 )}
                 <tr className="border-t border-black">
                   <td>Grand Total</td>
-                  <td className="text-right">₹{totalPrice.discounted.toFixed(2)}</td>
+                  <td className="text-right">
+                    ₹{totalPrice.discounted.toFixed(2)}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -620,18 +636,10 @@ export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
             ==== THANK YOU ====
           </div>
 
-          {isDuplicate && (
-            <div className="text-center text-xs text-red-600 pb-2">
-              ⚠️ This receipt was already saved earlier.
-            </div>
-          )}
-
           <div className="no-print flex justify-center gap-4 py-4">
             <button
               onClick={() => window.print()}
               className="bg-black text-white px-4 py-1 rounded flex items-center gap-1"
-              disabled={isDuplicate}
-              title={isDuplicate ? "Duplicate receipt cannot be reprinted" : "Print Receipt"}
             >
               <HiPrinter className="h-5 w-5" /> Print
             </button>
