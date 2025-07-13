@@ -115,11 +115,12 @@ export default function Home() {
         body: JSON.stringify({ password }),
       });
 
+
       const data = await res.json();
 
       if (data.success) {
         localStorage.setItem("isAdmin", "true");
-        setShowPasswordModal(false);
+        setShowPasswordModal(false);s
         setPassword("");
         setError("");
         router.push("/pages/order");

@@ -357,11 +357,15 @@ app.get("/menu", (req, res) => {
 // ✅ Admin password verification
 app.post("/admin/verify-password", (req, res) => {
   const { password } = req.body;
+  console.log("🔐 Received password:", password);
+  console.log("🔐 Expected password:", process.env.ADMIN_PASSWORD);
+
   if (password === process.env.ADMIN_PASSWORD) {
     return res.json({ success: true });
   }
   res.status(401).json({ success: false });
 });
+
 
 // ✅ Add product to menu
 app.post("/menu/add", async (req, res) => {
