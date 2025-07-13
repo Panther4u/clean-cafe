@@ -240,7 +240,7 @@ export default function Header({
         </div>
       )}
 
-      <div className="z-50 top-0 fixed w-full max-w-[414px] h-[52px] grid grid-cols-3 px-3 py-3 justify-between text-[#333736] text-lg font-semibold bg-[#FFFFFF] shadow-sm">
+      <div className="z-50 top-0 fixed w-full max-w-[414px] h-[52px] grid grid-cols-3 px-2 py-3 justify-between text-[#333736] text-lg font-semibold bg-[#FFFFFF] shadow-sm">
         <div className="flex items-center overflow-hidden">
           {page === "Order" ? (
             <Dropdown

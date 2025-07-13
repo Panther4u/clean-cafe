@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://sri-kandhan-cafe.onrender.com";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://clean-cafe.onrender.com";
 
 export default function SalesSummary() {
   const [summary, setSummary] = useState([]);
@@ -41,7 +41,7 @@ export default function SalesSummary() {
 
   return (
     <div className="p-0 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-6">📊 Sales Summary</h1>
+      <h1 className="text-1xl font-bold text-center mb-6">📊 Sales Summary</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-10">
         <div className="bg-green-100 border border-green-300 rounded-lg p-1 text-center shadow-sm">

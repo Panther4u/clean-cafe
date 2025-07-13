@@ -491,7 +491,7 @@ import SalesSummary from "@/app/components/salessummary";
 import withAdminAuth from "@/app/lib/withAdminAuth";
 
 const menusType = ["All", "Coffee", "Non Coffee", "Dessert", "Manual Brew", "Water", "Foods"];
-const $Page = ["Order", "Best Seller", "Cart", "Add Product", "Sales Summary"];
+const $Page = ["Order", "Best Seller", "Cart", "Add Product", "Sales"];
 
 function Order() {
   const router = useRouter();
