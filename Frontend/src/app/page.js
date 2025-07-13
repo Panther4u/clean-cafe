@@ -74,8 +74,6 @@
 //     </>
 //   );
 // }
-
-
 "use client";
 
 import Image from "next/image";
@@ -91,7 +89,9 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const modalRef = useRef();
+  const inputRef = useRef();
 
   useEffect(() => {
     const handler = (e) => {
@@ -102,25 +102,37 @@ export default function Home() {
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-    };
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleAccess = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/verify-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+  useEffect(() => {
+    if (showPasswordModal && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showPasswordModal]);
 
+  const handleAccess = async () => {
+    if (!password) {
+      setError("Password cannot be empty");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE || ""}/admin/verify-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        }
+      );
 
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         localStorage.setItem("isAdmin", "true");
-        setShowPasswordModal(false);s
+        setShowPasswordModal(false);
         setPassword("");
         setError("");
         router.push("/pages/order");
@@ -130,13 +142,13 @@ export default function Home() {
     } catch (err) {
       console.error("Failed to verify password", err);
       setError("Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleAccess();
-    }
+    if (e.key === "Enter") handleAccess();
   };
 
   return (
@@ -180,6 +192,7 @@ export default function Home() {
               <h2 className="text-lg font-bold text-center">Enter Access Password</h2>
               <div className="relative">
                 <input
+                  ref={inputRef}
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -202,12 +215,19 @@ export default function Home() {
               )}
               <div className="flex justify-between mt-2">
                 <button
+                  type="button"
+                  disabled={loading}
                   onClick={handleAccess}
-                  className="px-4 py-2 bg-[#EAB968] hover:bg-[#e1ac57] font-bold rounded"
+                  className={`px-4 py-2 font-bold rounded ${
+                    loading
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-[#EAB968] hover:bg-[#e1ac57]"
+                  }`}
                 >
-                  Enter
+                  {loading ? "Checking..." : "Enter"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowPasswordModal(false);
                     setPassword("");
