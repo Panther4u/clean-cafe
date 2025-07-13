@@ -287,6 +287,12 @@
 //   );
 // }
 
+
+
+
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -302,11 +308,13 @@ import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-// ✅ Fallback for local dev
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://sri-kandhan-cafe.onrender.com";
 
 export default function ViewReceipts() {
   const router = useRouter();
+
+  // All hooks must be declared unconditionally
+  const [authChecked, setAuthChecked] = useState(false);
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -315,7 +323,18 @@ export default function ViewReceipts() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch(`https://sri-kandhan-cafe.onrender.com/receipts`)
+    const isAdmin = localStorage.getItem("isAdmin");
+    if (isAdmin !== "true") {
+      router.replace("/admin-login");
+    } else {
+      setAuthChecked(true);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (!authChecked) return;
+
+    fetch(`${API_BASE}/receipts`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setReceipts(data);
@@ -329,19 +348,26 @@ export default function ViewReceipts() {
     fetch(`${API_BASE}/menu`)
       .then((res) => res.json())
       .then((data) => {
-        // Filter out invalid items with no name
         const validMenu = Array.isArray(data)
           ? data.filter((item) => typeof item?.name === "string")
           : [];
         setMenu(validMenu);
       })
       .catch((err) => console.error("❌ Menu fetch failed:", err));
-  }, []);
+  }, [authChecked]);
+
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">Checking admin access...</p>
+      </div>
+    );
+  }
 
   const deleteReceipt = async (id, billNo) => {
     if (!confirm(`Delete receipt ${billNo}?`)) return;
     try {
-      const res = await fetch(`https://sri-kandhan-cafe.onrender.com/receipts/delete/${id}`, {
+      const res = await fetch(`${API_BASE}/receipts/delete/${id}`, {
         method: "DELETE",
       });
       const result = await res.json();
@@ -367,7 +393,7 @@ export default function ViewReceipts() {
   const saveEditedReceipt = async (receiptId) => {
     const updatedTotal = calculateTotal(editOrder);
     try {
-      const res = await fetch(`https://sri-kandhan-cafe.onrender.com/receipts/update/${receiptId}`, {
+      const res = await fetch(`${API_BASE}/receipts/update/${receiptId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: editOrder, grandTotal: updatedTotal }),
@@ -436,7 +462,7 @@ export default function ViewReceipts() {
       <div className="w-full max-w-md">
         <div className="mb-4 flex items-center gap-2">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/pages/order")}
             className="flex items-center gap-1 text-sm text-gray-600 hover:text-black transition"
           >
             <ArrowLeftIcon className="h-5 w-5" /> Back to Order
@@ -508,7 +534,7 @@ export default function ViewReceipts() {
               </div>
 
               <div className="mt-3">
-                <p className="font-semibold">🧃 Items:</p>
+                <p className="font-semibold">🧳 Items:</p>
                 <ul className="text-sm text-gray-700 list-disc list-inside">
                   {(editingId === receipt.id ? editOrder : receipt.order)?.map(
                     (item, itemIdx) => (

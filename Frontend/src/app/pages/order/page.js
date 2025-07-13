@@ -470,11 +470,10 @@
 // }
 
 
-
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "../../components/header";
 import { TabMenu } from "@/app/components/tabmenu";
 import { MenuCards } from "@/app/components/menucards";
@@ -487,59 +486,50 @@ import { Done } from "@/app/components/done";
 import { OrderCart } from "@/app/components/ordercart";
 import { motion as m } from "framer-motion";
 import allMenuItems from "@/app/data/menuItems";
+import AddProductForm from "@/app/components/addproductform";
+import SalesSummary from "@/app/components/salessummary";
+import withAdminAuth from "@/app/lib/withAdminAuth";
 
-const menusType = [
-  "All",
-  "Coffee",
-  "Non Coffee",
-  "Dessert",
-  "Manual Brew",
-  "Water",
-  "Foods",
-];
+const menusType = ["All", "Coffee", "Non Coffee", "Dessert", "Manual Brew", "Water", "Foods"];
+const $Page = ["Order", "Best Seller", "Cart", "Add Product", "Sales Summary"];
 
-const $Page = ["Order", "Best Seller", "Cart", "Logout"];
-
-export default function Order() {
+function Order() {
+  const router = useRouter();
+  const [allItems, setAllItems] = useState([]);
   const [itemsOrder, setItemsOrder] = useState([]);
-  const [totalPrice, setTotalPrice] = useState({
-    amount: 0,
-    length: 0,
-    discounted: 0,
-  });
+  const [totalPrice, setTotalPrice] = useState({ amount: 0, length: 0, discounted: 0 });
   const [currentPage, setCurrentPage] = useState(0);
   const [menuCards, setMenuCards] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [detailModal, setDetailModal] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [checkout, setCheckout] = useState({
-    order: [],
-    totalPrice: 0,
-    finalPrice: 0,
-    payment: "",
-  });
+  const [checkout, setCheckout] = useState({ order: [], totalPrice: 0, finalPrice: 0, payment: "" });
   const [radioChekced, setRadioChecked] = useState("");
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const modalRef = useRef();
 
   useEffect(() => {
-    setItemsOrder(allMenuItems);
+    const initialItems = allMenuItems.map(item => ({ ...item, amount: 0, notes: "" }));
+    setAllItems(initialItems);
+    setItemsOrder(initialItems);
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    setTotalPrice((t) => ({ ...t, discounted: totalPrice.amount }));
+    setTotalPrice(t => ({ ...t, discounted: t.amount }));
   }, [totalPrice.amount]);
 
   useEffect(() => {
     const discountedPrice = (totalPrice.amount * discountAmount) / 100;
-    setTotalPrice({
-      ...totalPrice,
-      discounted: totalPrice.amount - discountedPrice,
-    });
+    setTotalPrice(t => ({ ...t, discounted: t.amount - discountedPrice }));
   }, [discountAmount]);
+
+  useEffect(() => {
+    if (searchText && currentPage !== 0) {
+      setCurrentPage(0);
+    }
+  }, [searchText]);
 
   const tabMenuHandler = (e) => {
     e.preventDefault();
@@ -548,102 +538,79 @@ export default function Order() {
 
   const plusButtonHandler = (e, idButton = null) => {
     e.preventDefault();
-    const updatedItems = itemsOrder.map((item) => {
-      if ((idButton && item.id === idButton) || item.id === e.target.id) {
-        setTotalPrice({
-          ...totalPrice,
-          amount: totalPrice.amount + item.price,
-          length: totalPrice.length + 1,
-        });
+    const id = idButton || e.target.id;
+    const updated = itemsOrder.map(item => {
+      if (item.id === id) {
+        setTotalPrice(t => ({ ...t, amount: t.amount + item.price, length: t.length + 1 }));
         setDiscountAmount(0);
         return { ...item, amount: item.amount + 1 };
       }
       return item;
     });
-    setItemsOrder(updatedItems);
+    setItemsOrder(updated);
   };
 
   const minusButtonHandler = (e, idButton = null) => {
     e.preventDefault();
-    const updatedItems = itemsOrder.map((item) => {
-      if ((idButton && item.id === idButton) || item.id === e.target.id) {
-        if (item.amount > 0) {
-          setTotalPrice({
-            ...totalPrice,
-            amount: totalPrice.amount - item.price,
-            length: totalPrice.length - 1,
-          });
-          setDiscountAmount(0);
-          return { ...item, amount: item.amount - 1 };
-        }
+    const id = idButton || e.target.id;
+    const updated = itemsOrder.map(item => {
+      if (item.id === id && item.amount > 0) {
+        setTotalPrice(t => ({ ...t, amount: t.amount - item.price, length: t.length - 1 }));
+        setDiscountAmount(0);
+        return { ...item, amount: item.amount - 1 };
       }
       return item;
     });
-    setItemsOrder(updatedItems);
+    setItemsOrder(updated);
   };
 
   const deleteItemHandler = (e, idButton) => {
     e.preventDefault();
-    const updatedItems = itemsOrder.map((item) => {
+    const updated = itemsOrder.map(item => {
       if (item.id === idButton && item.amount > 0) {
-        const totalItemPrice = item.amount * item.price;
-        setTotalPrice({
-          ...totalPrice,
-          amount: totalPrice.amount - totalItemPrice,
-          length: totalPrice.length - item.amount,
-        });
+        const total = item.amount * item.price;
+        setTotalPrice(t => ({ ...t, amount: t.amount - total, length: t.length - item.amount }));
         return { ...item, amount: 0, notes: "" };
       }
       return item;
     });
-    setItemsOrder(updatedItems);
+    setItemsOrder(updated);
   };
 
   const showModal = (e, dataId) => {
     e.preventDefault();
     setOpenModal(true);
-    const item = itemsOrder.find((d) => d.id == e.target.id || d.id == dataId);
-    if (item) setDetailModal(item);
+    const id = dataId || e.target.id;
+    const found = itemsOrder.find(item => item.id == id);
+    if (found) setDetailModal(found);
   };
 
   const closeModal = (e, modalId) => {
-    const updatedItems = itemsOrder.map((item) =>
+    const updated = itemsOrder.map(item =>
       item.id === modalId ? { ...item, notes: detailModal?.notes } : item
     );
-    setItemsOrder(updatedItems);
+    setItemsOrder(updated);
     setOpenModal(false);
   };
 
   const footerHandler = () => {
-    const orderItems = itemsOrder.filter((item) => item.amount > 0);
-
-    if (orderItems.length === 0) {
-      setCurrentPage(2);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    if (!radioChekced) {
+    const orderItems = itemsOrder.filter(item => item.amount > 0);
+    if (orderItems.length === 0 || !radioChekced) {
       setCurrentPage(2);
       window.scrollTo({ top: 1000, behavior: "smooth" });
       return;
     }
-
-    setCheckout({
-      order: orderItems,
-      totalPrice: totalPrice.amount,
-      finalPrice: totalPrice.discounted,
-      payment: radioChekced,
-    });
+    setCheckout({ order: orderItems, totalPrice: totalPrice.amount, finalPrice: totalPrice.discounted, payment: radioChekced });
     setDone(true);
   };
 
-  const handleChange = (event) => {
-    setRadioChecked(event.target.value);
+  const handleChange = (e) => {
+    setRadioChecked(e.target.value);
   };
 
   const resetOrderState = () => {
-    setItemsOrder(allMenuItems.map(item => ({ ...item, amount: 0, notes: "" })));
+    const reset = allItems.map(item => ({ ...item, amount: 0, notes: "" }));
+    setItemsOrder(reset);
     setTotalPrice({ amount: 0, length: 0, discounted: 0 });
     setDiscountAmount(0);
     setRadioChecked("");
@@ -653,63 +620,64 @@ export default function Order() {
     setSearchText("");
   };
 
-  const filteredItems = itemsOrder.filter((item) => {
+  const handleProductAdded = (newItem) => {
+    const extended = [...allItems, { ...newItem, amount: 0, notes: "" }];
+    setAllItems(extended);
+    setItemsOrder(extended);
+  };
+
+  const AddProductPage = () => (
+    <div className="p-4 max-w-xl mx-auto">
+      <h1 className="text-xl font-bold mb-4">Add New Product</h1>
+      <AddProductForm onProductAdded={handleProductAdded} />
+    </div>
+  );
+
+  const filteredItems = allItems.map(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase());
     const matchesType = menuCards == 0 || item.type === parseInt(menuCards);
-    return searchText ? matchesSearch : matchesType;
-  });
+    const show = searchText.length > 0 ? matchesSearch : matchesType;
+
+    if (!show) return null;
+
+    const matchedOrder = itemsOrder.find(o => o.id === item.id);
+    return {
+      ...item,
+      amount: matchedOrder?.amount || 0,
+      notes: matchedOrder?.notes || "",
+    };
+  }).filter(Boolean);
 
   return (
     <>
       <title>Coffee Ordering Mobile Web</title>
       {done ? (
-        <Done
-          checkout={checkout}
-          discountAmount={discountAmount}
-          totalPrice={totalPrice}
-          onNewOrder={resetOrderState}
-        />
+        <Done checkout={checkout} discountAmount={discountAmount} totalPrice={totalPrice} onNewOrder={resetOrderState} />
       ) : (
         <div className="z-30 flex w-full justify-center">
           <m.div className="flex max-w-[414px] justify-center font-sans">
-            <Header
-              page={$Page[currentPage]}
-              totalPrice={totalPrice.length}
-              onClickOrder={() => {
-                setCurrentPage(0);
-                setMenuCards(0);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              onClickFavorite={() => {
-                setCurrentPage(1);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              onClickCart={() => {
-                setCurrentPage(2);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              searchText={searchText}
-              setSearchText={setSearchText}
-            />
+          <Header
+            page={$Page[currentPage]}
+            totalPrice={totalPrice.length}
+            onClickOrder={() => { setCurrentPage(0); setMenuCards(0); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onClickFavorite={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            onClickCart={() => { setCurrentPage(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            searchText={searchText}        // ✅ Pass down controlled state
+            setSearchText={setSearchText}  // ✅ Pass setter function
+            setCurrentPage={setCurrentPage}
+            allMenuItems={allItems}
+          />
+
 
             {totalPrice.length !== 0 && (
-              <Footer
-                page={currentPage}
-                totalPrice={totalPrice}
-                onClick={footerHandler}
-              />
+              <Footer page={currentPage} totalPrice={totalPrice} onClick={footerHandler} />
             )}
 
             <div className="w-screen min-h-screen mt-[52px] bg-white">
               <div className="w-full max-w-[414px] p-3 pb-[62px] h-full space-y-3 overflow-hidden">
                 {currentPage === 0 && (
                   <>
-                    <TabMenu
-                      menusType={menusType}
-                      menuCards={menuCards}
-                      onClick={tabMenuHandler}
-                    />
-
+                    <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
                     {isLoading ? (
                       <div className="flex h-screen items-center justify-center">
                         <Spinner color="success" />
@@ -723,6 +691,7 @@ export default function Order() {
                             data={data}
                             onClickMinus={minusButtonHandler}
                             onClickPlus={plusButtonHandler}
+                            searchText={searchText}
                           />
                         ))}
                       </div>
@@ -732,55 +701,25 @@ export default function Order() {
 
                 {currentPage === 1 && (
                   <div className="grid grid-cols-2 gap-3">
-                    {itemsOrder
-                      .filter((item) => item.favorite)
-                      .map((data, idx) => (
-                        <MenuCards
-                          key={idx}
-                          onClickModal={showModal}
-                          data={data}
-                          onClickMinus={minusButtonHandler}
-                          onClickPlus={plusButtonHandler}
-                        />
-                      ))}
+                    {itemsOrder.filter(item => item.favorite).map((data, idx) => (
+                      <MenuCards key={idx} onClickModal={showModal} data={data} onClickMinus={minusButtonHandler} onClickPlus={plusButtonHandler} />
+                    ))}
                   </div>
                 )}
 
                 {currentPage === 2 && (
                   <div className="flex flex-col">
-                    <OrderCart
-                      itemsOrder={itemsOrder}
-                      minusButtonHandler={minusButtonHandler}
-                      plusButtonHandler={plusButtonHandler}
-                      setCurrentPage={setCurrentPage}
-                      deleteItemHandler={deleteItemHandler}
-                      showModal={showModal}
-                    />
-                    <VoucherPromo
-                      totalPrice={totalPrice}
-                      setTotalPrice={setTotalPrice}
-                      discountAmount={discountAmount}
-                      setDiscountAmount={setDiscountAmount}
-                    />
-                    <PaymentCard
-                      radioChekced={radioChekced}
-                      setRadioChecked={setRadioChecked}
-                      handleChange={handleChange}
-                      totalPrice={totalPrice}
-                      discountAmount={discountAmount}
-                      onClickToMenu={() => setCurrentPage(0)}
-                    />
+                    <OrderCart itemsOrder={itemsOrder} minusButtonHandler={minusButtonHandler} plusButtonHandler={plusButtonHandler} setCurrentPage={setCurrentPage} deleteItemHandler={deleteItemHandler} showModal={showModal} />
+                    <VoucherPromo totalPrice={totalPrice} setTotalPrice={setTotalPrice} discountAmount={discountAmount} setDiscountAmount={setDiscountAmount} />
+                    <PaymentCard radioChekced={radioChekced} setRadioChecked={setRadioChecked} handleChange={handleChange} totalPrice={totalPrice} discountAmount={discountAmount} onClickToMenu={() => setCurrentPage(0)} />
                   </div>
                 )}
+
+                {currentPage === 3 && <AddProductPage />}
+                {currentPage === 4 && <SalesSummary />}
               </div>
 
-              <ModalCard
-                detailModal={detailModal}
-                show={openModal}
-                setDetailModal={setDetailModal}
-                onClick={(e) => closeModal(e, detailModal?.id)}
-                onClose={(e) => closeModal(e, detailModal?.id)}
-              />
+              <ModalCard detailModal={detailModal} show={openModal} setDetailModal={setDetailModal} onClick={(e) => closeModal(e, detailModal?.id)} onClose={(e) => closeModal(e, detailModal?.id)} />
             </div>
           </m.div>
         </div>
@@ -788,3 +727,5 @@ export default function Order() {
     </>
   );
 }
+
+export default withAdminAuth(Order);

@@ -126,6 +126,9 @@
 // }
 
 
+
+
+
 "use client";
 import {
   ArrowLeftIcon,
@@ -142,9 +145,11 @@ import {
   HiShoppingCart,
   HiViewGrid,
   HiReceiptRefund,
+  HiCurrencyRupee,
 } from "react-icons/hi";
 import { motion as m } from "framer-motion";
 import { useState } from "react";
+
 
 export default function Header({
   page,
@@ -153,14 +158,16 @@ export default function Header({
   onClickCart,
   totalPrice,
   allMenuItems = [],
+  setCurrentPage,
+  searchText,           // ✅ accept from parent
+  setSearchText,        // ✅ set from parent
 }) {
   const router = useRouter();
   const [showSearch, setShowSearch] = useState(false);
-  const [searchText, setSearchText] = useState("");
 
   const buttonMenu = [
     {
-      icon: <HeartIcon />, 
+      icon: <HeartIcon />,
       function: onClickFavorite,
     },
     {
@@ -175,7 +182,7 @@ export default function Header({
       function: onClickCart,
     },
     {
-      icon: <MagnifyingGlassIcon />, 
+      icon: <MagnifyingGlassIcon />,
       function: () => setShowSearch((prev) => !prev),
     },
   ];
@@ -185,8 +192,18 @@ export default function Header({
     { name: "Favorite", icon: HiHeart, function: onClickFavorite },
     { name: "Cart", icon: HiShoppingCart, function: onClickCart },
     { name: "View Receipts", icon: HiReceiptRefund, function: () => router.push("/viewreceipts") },
+    { name: "Add Product", icon: HiViewGrid, function: () => setCurrentPage(3) },
+    { name: "Sales Summary", icon: HiCurrencyRupee, function: () => setCurrentPage(4) },
     { name: "Divider", icon: "", function: "" },
-    { name: "Logout", icon: HiLogout, function: () => router.push("/") },
+    {
+      name: "Logout",
+      icon: HiLogout,
+      function: () => {
+        localStorage.removeItem("isAdmin");
+        localStorage.removeItem("adminLoginTime");
+        router.replace("/");
+      },
+    },
   ];
 
   return (
@@ -211,8 +228,8 @@ export default function Header({
                     key={item.id}
                     className="p-2 border-b cursor-pointer hover:bg-gray-100 text-sm"
                     onClick={() => {
-                      setSearchText("");
-                      setShowSearch(false);
+                      setSearchText(item.name);  // ✅ Set selected item name
+                      setShowSearch(false);      // ✅ Close search box
                     }}
                   >
                     {item.name}
@@ -225,7 +242,7 @@ export default function Header({
 
       <div className="z-50 top-0 fixed w-full max-w-[414px] h-[52px] grid grid-cols-3 px-3 py-3 justify-between text-[#333736] text-lg font-semibold bg-[#FFFFFF] shadow-sm">
         <div className="flex items-center overflow-hidden">
-          {page == "Order" ? (
+          {page === "Order" ? (
             <Dropdown
               placement="bottom"
               renderTrigger={() => (
@@ -270,21 +287,14 @@ export default function Header({
         <button
           className="flex justify-center font-bold"
           onClick={() => {
-            window.scrollTo({
-              top: 0,
-              behavior: "smooth",
-            });
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
           {page}
         </button>
         <div className="flex justify-end items-center space-x-5">
           {buttonMenu.map((data, idx) => (
-            <button
-              key={idx}
-              onClick={data.function}
-              className="h-[25px] w-[25px]"
-            >
+            <button key={idx} onClick={data.function} className="h-[25px] w-[25px]">
               {data.icon}
             </button>
           ))}
@@ -292,4 +302,4 @@ export default function Header({
       </div>
     </>
   );
-} 
+}

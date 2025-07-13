@@ -147,9 +147,9 @@ app.post("/print", async (req, res) => {
   try {
     const data = req.body;
     const now = new Date();
-    const today = now.toISOString().split("T")[0]; // e.g., "2025-07-12"
+    const today = now.toISOString().split("T")[0];
 
-    // 🔍 Check for duplicate (same order, total, payment method, today)
+    // 🔍 Check for duplicate
     const snapshot = await db
       .collection("receipts")
       .where("total", "==", data.total)
@@ -175,7 +175,7 @@ app.post("/print", async (req, res) => {
       });
     }
 
-    // 🔁 Increment and generate new bill number
+    // 🔁 Bill number increment
     const counterRef = db.collection("meta").doc("counter");
     const newBillNo = await db.runTransaction(async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
@@ -197,8 +197,42 @@ app.post("/print", async (req, res) => {
     };
 
     const savedDoc = await db.collection("receipts").add(receipt);
-
     console.log("✅ Receipt saved with ID:", savedDoc.id);
+
+    // ✅ Sales Summary Update
+    const salesRef = db.collection("sales_summary");
+
+    for (const item of data.order) {
+      const itemRef = salesRef.doc(String(item.id));
+      const snapshot = await itemRef.get();
+
+      const soldQty = item.amount;
+      const totalSales = soldQty * item.price;
+      const totalCost = soldQty * (item.purchaseRate || 0);
+      const profit = totalSales - totalCost;
+
+      if (snapshot.exists) {
+        const prev = snapshot.data();
+        await itemRef.update({
+          soldQty: prev.soldQty + soldQty,
+          totalSales: prev.totalSales + totalSales,
+          totalCost: prev.totalCost + totalCost,
+          profit: prev.profit + profit,
+          lastSold: now.toISOString(),
+        });
+      } else {
+        await itemRef.set({
+          id: item.id,
+          name: item.name,
+          soldQty,
+          totalSales,
+          totalCost,
+          profit,
+          lastSold: now.toISOString(),
+        });
+      }
+    }
+
     res.json({
       status: "success",
       saved: true,
@@ -210,6 +244,51 @@ app.post("/print", async (req, res) => {
     res.status(500).json({ error: "Failed to save receipt" });
   }
 });
+
+// ✅ Sales Summary
+app.get("/sales-summary", async (req, res) => {
+  try {
+    const receiptsSnapshot = await db.collection("receipts").get();
+    const receipts = receiptsSnapshot.docs.map((doc) => doc.data());
+
+    const summaryMap = {};
+
+    for (const receipt of receipts) {
+      for (const item of receipt.order || []) {
+        const key = item.id || item.name;
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            id: item.id,
+            name: item.name,
+            soldQty: 0,
+            totalSales: 0,
+            totalCost: 0,
+            profit: 0,
+            lastSold: receipt.createdAt,
+          };
+        }
+
+        const qty = item.amount;
+        const sales = item.price * qty;
+        const cost = item.purchaseRate ? item.purchaseRate * qty : 0;
+        const profit = sales - cost;
+
+        summaryMap[key].soldQty += qty;
+        summaryMap[key].totalSales += sales;
+        summaryMap[key].totalCost += cost;
+        summaryMap[key].profit += profit;
+        summaryMap[key].lastSold = receipt.createdAt;
+      }
+    }
+
+    const summaryList = Object.values(summaryMap).sort((a, b) => b.soldQty - a.soldQty);
+    res.json(summaryList);
+  } catch (err) {
+    console.error("❌ Failed to fetch sales summary:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 // ✅ Get all receipts
 app.get("/receipts", async (req, res) => {
@@ -258,18 +337,52 @@ app.get("/menu", (req, res) => {
   res.json(menuData.menu || []);
 });
 
-// ✅ Admin login
-app.post("/admin/login", (req, res) => {
-  const { id, password } = req.body;
-  const ADMIN_ID = process.env.ADMIN_ID || "admin";
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "123456";
+// Express.js route
+app.post("/admin/verify-password", (req, res) => {
+  const { password } = req.body;
+  if (password === process.env.ADMIN_PASSWORD) {
+    return res.json({ success: true });
+  }
+  res.status(401).json({ success: false });
+});
 
-  if (id === ADMIN_ID && password === ADMIN_PASSWORD) {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ error: "Invalid credentials" });
+
+
+// ✅ Add product to menu
+app.post("/menu/add", async (req, res) => {
+  try {
+    const newItem = req.body;
+
+    // Validate basic required fields
+    if (!newItem.name || typeof newItem.price !== "number") {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Optional: Auto-generate ID if not provided
+    if (!newItem.id) {
+      const snapshot = await db.collection("menu").orderBy("id", "desc").limit(1).get();
+      const lastItem = snapshot.docs[0]?.data();
+      newItem.id = lastItem ? lastItem.id + 1 : 1;
+    }
+
+    // Default fields
+    const product = {
+      description: "",
+      amount: 0,
+      favorite: false,
+      notes: "",
+      ...newItem,
+    };
+
+    await db.collection("menu").doc(String(product.id)).set(product);
+    console.log("✅ Product added:", product.name);
+    res.json({ success: true, item: product });
+  } catch (err) {
+    console.error("❌ Failed to add menu item:", err);
+    res.status(500).json({ error: "Failed to add menu item" });
   }
 });
+
 
 // ✅ Start server
 app.listen(PORT, () => {
