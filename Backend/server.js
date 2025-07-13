@@ -125,6 +125,7 @@ require("dotenv").config();
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
+// 🔐 Firebase Initialization
 let serviceAccount;
 try {
   serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
@@ -132,24 +133,44 @@ try {
   console.error("❌ Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON from .env");
   process.exit(1);
 }
-
 initializeApp({ credential: cert(serviceAccount) });
 const db = getFirestore();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// ✅ CORS Configuration
+const allowedOrigins = [
+  "https://clean-cafe.vercel.app",
+  "http://localhost:3000",
+];
+
+app.use((req, res, next) => {
+  console.log("🌐 Request from origin:", req.headers.origin);
+  next();
+});
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("❌ Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
+
 app.use(bodyParser.json());
 
-// ✅ Save Receipt with auto-incremented bill number and duplicate check
+// ✅ Save Receipt with auto-increment and duplicate check
 app.post("/print", async (req, res) => {
   try {
     const data = req.body;
     const now = new Date();
     const today = now.toISOString().split("T")[0];
 
-    // 🔍 Check for duplicate
     const snapshot = await db
       .collection("receipts")
       .where("total", "==", data.total)
@@ -175,7 +196,6 @@ app.post("/print", async (req, res) => {
       });
     }
 
-    // 🔁 Bill number increment
     const counterRef = db.collection("meta").doc("counter");
     const newBillNo = await db.runTransaction(async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
@@ -189,7 +209,6 @@ app.post("/print", async (req, res) => {
     });
 
     const formattedBillNo = `#${String(newBillNo).padStart(2, "0")}`;
-
     const receipt = {
       ...data,
       billNo: formattedBillNo,
@@ -199,7 +218,6 @@ app.post("/print", async (req, res) => {
     const savedDoc = await db.collection("receipts").add(receipt);
     console.log("✅ Receipt saved with ID:", savedDoc.id);
 
-    // ✅ Sales Summary Update
     const salesRef = db.collection("sales_summary");
 
     for (const item of data.order) {
@@ -289,7 +307,6 @@ app.get("/sales-summary", async (req, res) => {
   }
 });
 
-
 // ✅ Get all receipts
 app.get("/receipts", async (req, res) => {
   try {
@@ -337,7 +354,7 @@ app.get("/menu", (req, res) => {
   res.json(menuData.menu || []);
 });
 
-// Express.js route
+// ✅ Admin password verification
 app.post("/admin/verify-password", (req, res) => {
   const { password } = req.body;
   if (password === process.env.ADMIN_PASSWORD) {
@@ -346,26 +363,21 @@ app.post("/admin/verify-password", (req, res) => {
   res.status(401).json({ success: false });
 });
 
-
-
 // ✅ Add product to menu
 app.post("/menu/add", async (req, res) => {
   try {
     const newItem = req.body;
 
-    // Validate basic required fields
     if (!newItem.name || typeof newItem.price !== "number") {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Optional: Auto-generate ID if not provided
     if (!newItem.id) {
       const snapshot = await db.collection("menu").orderBy("id", "desc").limit(1).get();
       const lastItem = snapshot.docs[0]?.data();
       newItem.id = lastItem ? lastItem.id + 1 : 1;
     }
 
-    // Default fields
     const product = {
       description: "",
       amount: 0,
@@ -382,7 +394,6 @@ app.post("/menu/add", async (req, res) => {
     res.status(500).json({ error: "Failed to add menu item" });
   }
 });
-
 
 // ✅ Start server
 app.listen(PORT, () => {

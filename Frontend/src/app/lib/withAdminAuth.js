@@ -11,7 +11,7 @@ export default function withAdminAuth(Component) {
     useEffect(() => {
       const isAdmin = localStorage.getItem("isAdmin");
       if (isAdmin !== "true") {
-        router.replace("/admin-login");
+        router.replace("/");
       }
     }, [router]);
 
