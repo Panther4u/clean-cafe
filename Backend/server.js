@@ -117,6 +117,7 @@
 // });
 
 
+// server.js
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -124,13 +125,14 @@ require("dotenv").config();
 
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
+const menuData = require("./menu.json");
 
 // 🔐 Firebase Initialization
 let serviceAccount;
 try {
   serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
 } catch (error) {
-  console.error("❌ Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON from .env");
+  console.error("\u274C Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON from .env");
   process.exit(1);
 }
 initializeApp({ credential: cert(serviceAccount) });
@@ -145,17 +147,12 @@ const allowedOrigins = [
   "http://localhost:3000",
 ];
 
-app.use((req, res, next) => {
-  console.log("🌐 Request from origin:", req.headers.origin);
-  next();
-});
-
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("❌ Not allowed by CORS"));
+      callback(new Error("\u274C Not allowed by CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -164,7 +161,7 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// ✅ Save Receipt with auto-increment and duplicate check
+// ✅ Save Receipt
 app.post("/print", async (req, res) => {
   try {
     const data = req.body;
@@ -187,7 +184,6 @@ app.post("/print", async (req, res) => {
     });
 
     if (isDuplicate) {
-      console.log("⚠️ Duplicate receipt detected. Skipping save.");
       return res.json({
         status: "duplicate",
         saved: false,
@@ -216,10 +212,8 @@ app.post("/print", async (req, res) => {
     };
 
     const savedDoc = await db.collection("receipts").add(receipt);
-    console.log("✅ Receipt saved with ID:", savedDoc.id);
 
     const salesRef = db.collection("sales_summary");
-
     for (const item of data.order) {
       const itemRef = salesRef.doc(String(item.id));
       const snapshot = await itemRef.get();
@@ -258,7 +252,7 @@ app.post("/print", async (req, res) => {
       billNo: formattedBillNo,
     });
   } catch (err) {
-    console.error("❌ Error saving receipt:", err);
+    console.error("\u274C Error saving receipt:", err);
     res.status(500).json({ error: "Failed to save receipt" });
   }
 });
@@ -302,7 +296,7 @@ app.get("/sales-summary", async (req, res) => {
     const summaryList = Object.values(summaryMap).sort((a, b) => b.soldQty - a.soldQty);
     res.json(summaryList);
   } catch (err) {
-    console.error("❌ Failed to fetch sales summary:", err);
+    console.error("\u274C Failed to fetch sales summary:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -310,17 +304,11 @@ app.get("/sales-summary", async (req, res) => {
 // ✅ Get all receipts
 app.get("/receipts", async (req, res) => {
   try {
-    const snapshot = await db
-      .collection("receipts")
-      .orderBy("createdAt", "desc")
-      .get();
-    const receipts = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const snapshot = await db.collection("receipts").orderBy("createdAt", "desc").get();
+    const receipts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     res.json(receipts);
   } catch (err) {
-    console.error("❌ Failed to fetch receipts:", err);
+    console.error("\u274C Failed to fetch receipts:", err);
     res.status(500).json({ error: "Failed to fetch receipts" });
   }
 });
@@ -329,10 +317,9 @@ app.get("/receipts", async (req, res) => {
 app.delete("/receipts/delete/:id", async (req, res) => {
   try {
     await db.collection("receipts").doc(req.params.id).delete();
-    console.log("🗑️ Deleted receipt ID:", req.params.id);
     res.json({ deleted: true });
   } catch (err) {
-    console.error("❌ Failed to delete receipt:", err);
+    console.error("\u274C Failed to delete receipt:", err);
     res.status(500).json({ error: "Failed to delete receipt" });
   }
 });
@@ -343,13 +330,12 @@ app.put("/receipts/update/:id", async (req, res) => {
     await db.collection("receipts").doc(req.params.id).update(req.body);
     res.json({ updated: true });
   } catch (err) {
-    console.error("❌ Error updating receipt:", err);
+    console.error("\u274C Error updating receipt:", err);
     res.status(500).json({ error: "Failed to update receipt" });
   }
 });
 
 // ✅ Serve static menu
-const menuData = require("./menu.json");
 app.get("/menu", (req, res) => {
   res.json(menuData.menu || []);
 });
@@ -357,21 +343,16 @@ app.get("/menu", (req, res) => {
 // ✅ Admin password verification
 app.post("/admin/verify-password", (req, res) => {
   const { password } = req.body;
-  console.log("🔐 Received password:", password);
-  console.log("🔐 Expected password:", process.env.ADMIN_PASSWORD);
-
   if (password === process.env.ADMIN_PASSWORD) {
     return res.json({ success: true });
   }
   res.status(401).json({ success: false });
 });
 
-
-// ✅ Add product to menu
+// ✅ Add menu item
 app.post("/menu/add", async (req, res) => {
   try {
     const newItem = req.body;
-
     if (!newItem.name || typeof newItem.price !== "number") {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -391,15 +372,14 @@ app.post("/menu/add", async (req, res) => {
     };
 
     await db.collection("menu").doc(String(product.id)).set(product);
-    console.log("✅ Product added:", product.name);
     res.json({ success: true, item: product });
   } catch (err) {
-    console.error("❌ Failed to add menu item:", err);
+    console.error("\u274C Failed to add menu item:", err);
     res.status(500).json({ error: "Failed to add menu item" });
   }
 });
 
 // ✅ Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`\uD83D\uDE80 Server running at http://localhost:${PORT}`);
 });
