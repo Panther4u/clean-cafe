@@ -208,38 +208,39 @@ export default function Header({
 
   return (
     <>
-      {showSearch && (
-        <div className="fixed top-14 z-40 w-full max-w-[414px] bg-white shadow-md p-2">
-<input
-  type="text"
-  placeholder="Search items..."
-  value={searchText}
-  onChange={(e) => setSearchText(e.target.value)}
-  className="w-full p-2 border rounded-md text-sm text-black"
-/>
+{showSearch && (
+  <div className="fixed top-[52px] z-50 w-full max-w-[414px] bg-white shadow-md p-2">
+    <input
+      type="text"
+      placeholder="Search items..."
+      value={searchText}
+      onChange={(e) => setSearchText(e.target.value)}
+      className="w-full p-2 border rounded-md text-sm text-black"
+    />
+{searchText.length > 0 && allMenuItems.length > 0 && (
+  <ul className="max-h-48 overflow-y-auto mt-2 bg-white z-50 relative shadow-md">
+    {allMenuItems
+      .filter((item) =>
+        item.name.toLowerCase().includes(searchText.toLowerCase())
+      )
+      .map((item) => (
+        <li
+          key={item.id}
+          className="p-2 border-b cursor-pointer hover:bg-gray-100 text-sm text-black"
+          onClick={() => {
+            setSearchText(item.name);
+            setShowSearch(false);
+          }}
+        >
+          {item.name}
+        </li>
+      ))}
+  </ul>
+)}
 
-          {searchText.length > 0 && allMenuItems.length > 0 && (
-            <ul className="max-h-48 overflow-y-auto mt-2">
-              {allMenuItems
-                .filter((item) =>
-                  item.name.toLowerCase().includes(searchText.toLowerCase())
-                )
-                .map((item) => (
-                  <li
-                    key={item.id}
-                    className="p-2 border-b cursor-pointer hover:bg-gray-100 text-sm"
-                    onClick={() => {
-                      setSearchText(item.name);  // ✅ Set selected item name
-                      setShowSearch(false);      // ✅ Close search box
-                    }}
-                  >
-                    {item.name}
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
-      )}
+  </div>
+)}
+
 
       <div className="z-50 top-0 fixed w-full max-w-[414px] h-[52px] grid grid-cols-3 px-2 py-3 justify-between text-[#333736] text-lg font-semibold bg-[#FFFFFF] shadow-sm">
         <div className="flex items-center overflow-hidden">
