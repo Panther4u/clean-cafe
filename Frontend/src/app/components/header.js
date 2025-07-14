@@ -210,13 +210,14 @@ export default function Header({
     <>
       {showSearch && (
         <div className="fixed top-14 z-40 w-full max-w-[414px] bg-white shadow-md p-2">
-          <input
-            type="text"
-            placeholder="Search items..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="w-full p-2 border rounded-md text-sm"
-          />
+<input
+  type="text"
+  placeholder="Search items..."
+  value={searchText}
+  onChange={(e) => setSearchText(e.target.value)}
+  className="w-full p-2 border rounded-md text-sm text-black"
+/>
+
           {searchText.length > 0 && allMenuItems.length > 0 && (
             <ul className="max-h-48 overflow-y-auto mt-2">
               {allMenuItems

@@ -74,6 +74,11 @@
 //     </>
 //   );
 // }
+
+
+
+
+
 "use client";
 
 import Image from "next/image";
@@ -191,17 +196,18 @@ export default function Home() {
             >
               <h2 className="text-lg font-bold text-center">Enter Access Password</h2>
               <div className="relative">
-                <input
-                  ref={inputRef}
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Password"
-                  className={`w-full border p-2 rounded pr-10 focus:outline-none focus:ring-2 ${
-                    error ? "border-red-500 ring-red-200" : "border-gray-300 ring-[#EAB968]"
-                  }`}
-                />
+<input
+  ref={inputRef}
+  type={showPassword ? "text" : "password"}
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  onKeyDown={handleKeyDown}
+  placeholder="Password"
+  className={`w-full border p-2 rounded pr-10 text-black focus:outline-none focus:ring-2 ${
+    error ? "border-red-500 ring-red-200" : "border-gray-300 ring-[#EAB968]"
+  }`}
+/>
+
                 <button
                   type="button"
                   className="absolute inset-y-0 right-2 flex items-center text-gray-600"
