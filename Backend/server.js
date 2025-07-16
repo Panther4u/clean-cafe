@@ -124,7 +124,6 @@ require("dotenv").config();
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
-// 🔐 Firebase Initialization
 let serviceAccount;
 try {
   serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
@@ -138,7 +137,6 @@ const db = getFirestore();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ✅ CORS Configuration
 const allowedOrigins = [
   "https://clean-cafe.vercel.app",
   "http://localhost:3000",
@@ -161,14 +159,15 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ Save Receipt with auto-increment and duplicate check
 app.post("/print", async (req, res) => {
   try {
     const data = req.body;
     const now = new Date();
     const today = now.toISOString().split("T")[0];
+    const time = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
     const snapshot = await db
       .collection("receipts")
@@ -208,10 +207,24 @@ app.post("/print", async (req, res) => {
     });
 
     const formattedBillNo = `#${String(newBillNo).padStart(2, "0")}`;
+
+    const sanitizedOrder = data.order.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      amount: item.amount,
+      type: item.type || null,
+    }));
+
     const receipt = {
-      ...data,
+      order: sanitizedOrder,
+      total: data.total,
+      grandTotal: data.grandTotal,
+      paymentMethod: data.paymentMethod,
       billNo: formattedBillNo,
       createdAt: now.toISOString(),
+      date: today,
+      time: time
     };
 
     const savedDoc = await db.collection("receipts").add(receipt);
@@ -219,7 +232,7 @@ app.post("/print", async (req, res) => {
 
     const salesRef = db.collection("sales_summary");
 
-    for (const item of data.order) {
+    for (const item of sanitizedOrder) {
       const itemRef = salesRef.doc(String(item.id));
       const snapshot = await itemRef.get();
 
@@ -262,22 +275,48 @@ app.post("/print", async (req, res) => {
   }
 });
 
-// ✅ Sales Summary
+// ✅ Sales Summary with purchase price and MRP per item
 app.get("/sales-summary", async (req, res) => {
   try {
+    // Get all receipts
     const receiptsSnapshot = await db.collection("receipts").get();
     const receipts = receiptsSnapshot.docs.map((doc) => doc.data());
 
+    // Get product master data (MRP, purchaseRate)
+    const menuSnapshot = await db.collection("menu").get();
+    const menuMap = {};
+    menuSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      menuMap[String(data.id)] = {
+        name: data.name,
+        price: data.price,
+        purchaseRate: data.purchaseRate || 0,
+      };
+    });
+
     const summaryMap = {};
 
+    // Loop through receipts
     for (const receipt of receipts) {
       for (const item of receipt.order || []) {
         const key = item.id || item.name;
+        const menuItem = menuMap[String(item.id)] || {};
+
+        const price = menuItem.price || item.price || 0;
+        const purchaseRate = menuItem.purchaseRate || 0;
+        const qty = item.amount || 0;
+
+        const totalSales = price * qty;
+        const totalCost = purchaseRate * qty;
+        const profit = totalSales - totalCost;
+
         if (!summaryMap[key]) {
           summaryMap[key] = {
             id: item.id,
             name: item.name,
             soldQty: 0,
+            price: price,
+            purchaseRate: purchaseRate,
             totalSales: 0,
             totalCost: 0,
             profit: 0,
@@ -285,14 +324,9 @@ app.get("/sales-summary", async (req, res) => {
           };
         }
 
-        const qty = item.amount;
-        const sales = item.price * qty;
-        const cost = item.purchaseRate ? item.purchaseRate * qty : 0;
-        const profit = sales - cost;
-
         summaryMap[key].soldQty += qty;
-        summaryMap[key].totalSales += sales;
-        summaryMap[key].totalCost += cost;
+        summaryMap[key].totalSales += totalSales;
+        summaryMap[key].totalCost += totalCost;
         summaryMap[key].profit += profit;
         summaryMap[key].lastSold = receipt.createdAt;
       }
@@ -305,6 +339,7 @@ app.get("/sales-summary", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // ✅ Get all receipts
 app.get("/receipts", async (req, res) => {
@@ -323,6 +358,7 @@ app.get("/receipts", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch receipts" });
   }
 });
+
 
 // ✅ Delete receipt
 app.delete("/receipts/delete/:id", async (req, res) => {
@@ -365,7 +401,6 @@ app.post("/admin/verify-password", (req, res) => {
   res.status(401).json({ success: false });
 });
 
-
 // ✅ Add product to menu
 app.post("/menu/add", async (req, res) => {
   try {
@@ -397,6 +432,18 @@ app.post("/menu/add", async (req, res) => {
     res.status(500).json({ error: "Failed to add menu item" });
   }
 });
+
+app.get("/menu/all", async (req, res) => {
+  try {
+    const snapshot = await db.collection("menu").orderBy("id", "asc").get();
+    const menu = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(menu);
+  } catch (err) {
+    console.error("❌ Failed to fetch menu items:", err);
+    res.status(500).json({ error: "Failed to fetch menu items" });
+  }
+});
+
 
 // ✅ Start server
 app.listen(PORT, () => {

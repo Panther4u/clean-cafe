@@ -528,10 +528,12 @@ export default function ViewReceipts() {
 
               <div className="text-sm text-gray-800 space-y-1">
                 <p><strong>📅 Date:</strong> {receipt.date}</p>
+                <p><strong>⏰ Time:</strong> {receipt.time || "N/A"}</p>
                 <p><strong>💳 Payment:</strong> {receipt.paymentMethod}</p>
                 <p><strong>🍽️ Table:</strong> {receipt.tableNo || "01"}</p>
                 <p><strong>💰 Total:</strong> ₹{receipt.grandTotal.toLocaleString("id-ID")}</p>
               </div>
+
 
               <div className="mt-3">
                 <p className="font-semibold">🧳 Items:</p>

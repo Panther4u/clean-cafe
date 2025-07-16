@@ -548,7 +548,7 @@ export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
         <div className="receipt bg-white text-black">
           <div className="flex justify-center py-2">
             <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center">
-              <Image src="/Logo.png" width={80} height={80} alt="Logo" />
+              <Image src="/nkc.png" width={80} height={80} alt="Logo" />
             </div>
           </div>
 

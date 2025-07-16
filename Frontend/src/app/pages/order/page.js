@@ -468,8 +468,6 @@
   //   </>
 //   );
 // }
-
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -485,11 +483,11 @@ import { VoucherPromo } from "@/app/components/voucherpromo";
 import { Done } from "@/app/components/done";
 import { OrderCart } from "@/app/components/ordercart";
 import { motion as m } from "framer-motion";
-import allMenuItems from "@/app/data/menuItems";
 import AddProductForm from "@/app/components/addproductform";
 import SalesSummary from "@/app/components/salessummary";
 import withAdminAuth from "@/app/lib/withAdminAuth";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 const menusType = ["All", "Coffee", "Non Coffee", "Dessert", "Manual Brew", "Water", "Foods"];
 const $Page = ["Order", "Best Seller", "Cart", "Add Product", "Sales"];
 
@@ -510,10 +508,20 @@ function Order() {
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    const initialItems = allMenuItems.map(item => ({ ...item, amount: 0, notes: "" }));
-    setAllItems(initialItems);
-    setItemsOrder(initialItems);
-    setIsLoading(false);
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/menu/all`);
+        const data = await res.json();
+        const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+        setAllItems(initialized);
+        setItemsOrder(initialized);
+      } catch (err) {
+        console.error("Failed to fetch items:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchItems();
   }, []);
 
   useEffect(() => {
@@ -656,18 +664,17 @@ function Order() {
       ) : (
         <div className="z-30 flex w-full justify-center">
           <m.div className="flex max-w-[414px] justify-center font-sans">
-          <Header
-            page={$Page[currentPage]}
-            totalPrice={totalPrice.length}
-            onClickOrder={() => { setCurrentPage(0); setMenuCards(0); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            onClickFavorite={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            onClickCart={() => { setCurrentPage(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            searchText={searchText}        // ✅ Pass down controlled state
-            setSearchText={setSearchText}  // ✅ Pass setter function
-            setCurrentPage={setCurrentPage}
-            allMenuItems={allItems}
-          />
-
+            <Header
+              page={$Page[currentPage]}
+              totalPrice={totalPrice.length}
+              onClickOrder={() => { setCurrentPage(0); setMenuCards(0); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              onClickFavorite={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              onClickCart={() => { setCurrentPage(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              searchText={searchText}
+              setSearchText={setSearchText}
+              setCurrentPage={setCurrentPage}
+              allMenuItems={allItems}
+            />
 
             {totalPrice.length !== 0 && (
               <Footer page={currentPage} totalPrice={totalPrice} onClick={footerHandler} />
