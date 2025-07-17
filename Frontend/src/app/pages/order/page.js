@@ -688,7 +688,7 @@ function Order() {
         <Done checkout={checkout} discountAmount={discountAmount} totalPrice={totalPrice} onNewOrder={resetOrderState} />
       ) : (
         <div className="z-30 flex w-full justify-center">
-          <m.div className="flex max-w-[414px] justify-center font-sans">
+          <m.div className="flex w-full max-w-md md:max-w-4xl mx-auto justify-center font-sans">
             <Header
               page={$Page[currentPage]}
               totalPrice={totalPrice.length}
@@ -706,30 +706,36 @@ function Order() {
             )}
 
             <div className="w-screen min-h-screen mt-[52px] bg-white">
-              <div className="w-full max-w-[414px] p-3 pb-[62px] space-y-3 overflow-auto md:overflow-visible">
-                {currentPage === 0 && (
-                  <>
-                    <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
-                    {isLoading ? (
-                      <div className="flex h-screen items-center justify-center">
-                        <Spinner color="success" />
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        {filteredItems.map((data, idx) => (
-                          <MenuCards
-                            key={idx}
-                            onClickModal={showModal}
-                            data={data}
-                            onClickMinus={minusButtonHandler}
-                            onClickPlus={plusButtonHandler}
-                            searchText={searchText}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
+              <div className="w-fullmax-w-md md:max-w-4xl mx-auto p-3 pb-[62px] space-y-3 overflow-auto md:overflow-visible">
+{currentPage === 0 && (
+  <>
+    <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
+    {isLoading ? (
+      <div className="flex h-screen items-center justify-center">
+        <Spinner color="success" />
+      </div>
+    ) : (
+      <m.div
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {filteredItems.map((data, idx) => (
+          <MenuCards
+            key={idx}
+            onClickModal={showModal}
+            data={data}
+            onClickMinus={minusButtonHandler}
+            onClickPlus={plusButtonHandler}
+            searchText={searchText}
+          />
+        ))}
+      </m.div>
+    )}
+  </>
+)}
+
 
                 {currentPage === 1 && (
                   <div className="grid grid-cols-2 gap-3">

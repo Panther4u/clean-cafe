@@ -209,7 +209,7 @@ export default function Header({
   return (
     <>
 {showSearch && (
-  <div className="fixed top-[52px] z-50 w-full max-w-[414px] bg-white shadow-md p-2">
+  <div className="fixed top-[52px] z-50w-full max-w-md md:max-w-4xl mx-auto bg-white shadow-md p-2">
 <input
   type="text"
   placeholder="Search items..."
@@ -243,7 +243,7 @@ export default function Header({
 )}
 
 
-      <div className="z-50 top-0 fixed w-full max-w-[414px] h-[52px] grid grid-cols-3 px-2 py-3 justify-between text-[#333736] text-lg font-semibold bg-[#FFFFFF] shadow-sm">
+      <div className="z-50 top-0 fixed w-full max-w-md md:max-w-4xl mx-auto h-[52px] grid grid-cols-3 px-2 py-3 justify-between text-[#333736] text-lg font-semibold bg-[#FFFFFF] shadow-sm">
         <div className="flex items-center overflow-hidden">
           {page === "Order" ? (
             <Dropdown
