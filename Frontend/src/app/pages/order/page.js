@@ -468,6 +468,10 @@
   //   </>
 //   );
 // }
+
+
+
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -702,7 +706,7 @@ function Order() {
             )}
 
             <div className="w-screen min-h-screen mt-[52px] bg-white">
-              <div className="w-full max-w-[414px] p-3 pb-[62px] h-full space-y-3 overflow-hidden">
+              <div className="w-full max-w-[414px] p-3 pb-[62px] space-y-3 overflow-auto md:overflow-visible">
                 {currentPage === 0 && (
                   <>
                     <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
