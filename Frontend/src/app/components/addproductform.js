@@ -209,9 +209,10 @@ export default function AddProductForm() {
 
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded mt-6 font-sans">
-      <h2 className="text-xl font-semibold mb-4 text-center">
+      <h2 className="text-xl font-semibold mb-4 text-center text-black">
         {editItem ? "✏️ Edit Product" : "➕ Add New Product"}
       </h2>
+
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -252,20 +253,21 @@ export default function AddProductForm() {
           className="w-full border px-3 py-2 rounded"
         />
 
-        <select
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          required
-          className="w-full border px-3 py-2 rounded"
-        >
-          <option value="">Select Category</option>
-          {menusType.map((cat) => (
-            <option key={cat.value} value={cat.value}>
-              {cat.label}
-            </option>
-          ))}
-        </select>
+      <select
+        name="type"
+        value={formData.type}
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded text-black" // ✅ added text-black
+      >
+        <option value="">Select Category</option>
+        {menusType.map((cat) => (
+          <option key={cat.value} value={cat.value} className="text-black"> {/* ✅ text-black */}
+            {cat.label}
+          </option>
+        ))}
+      </select>
+
 
         <input
           type="file"
