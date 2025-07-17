@@ -488,8 +488,29 @@ import SalesSummary from "@/app/components/salessummary";
 import withAdminAuth from "@/app/lib/withAdminAuth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-const menusType = ["All", "Coffee", "Non Coffee", "Dessert", "Manual Brew", "Water", "Foods"];
-const $Page = ["Order", "Best Seller", "Cart", "Add Product", "Sales"];
+const menusType = [
+  "All",
+  "Tea",
+  "Coffee",
+  "Dairy Products",
+  "Snacks",
+  "Fresh Juice",
+  "Juice",
+  "Ice Cream",
+  "Karupatti Ice Cream",
+  "Karupatti Snacks",
+  "Others",
+];
+const $Page = [
+  "Order",
+  "Best Seller",
+  "Cart",
+  "Add Product",
+  "Sales",
+  "Daily Products",
+  "Manage Menu",      // ✅ optional
+  "View Receipts",    // ✅ optional
+];
 
 function Order() {
   const router = useRouter();

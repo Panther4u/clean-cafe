@@ -465,6 +465,19 @@ app.put("/menu/update/:id", async (req, res) => {
 });
 
 
+// ✅ Delete menu item
+app.delete("/menu/delete/:id", async (req, res) => {
+  try {
+    await db.collection("menu").doc(req.params.id).delete();
+    console.log("🗑️ Deleted product ID:", req.params.id);
+    res.json({ deleted: true });
+  } catch (err) {
+    console.error("❌ Failed to delete menu item:", err);
+    res.status(500).json({ error: "Failed to delete menu item" });
+  }
+});
+
+
 // ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);

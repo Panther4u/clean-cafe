@@ -6,13 +6,19 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 const TARGET_SIZE = 2767;
 
 const menusType = [
-  { label: "☕ Coffee", value: 1 },
-  { label: "🥤 Non Coffee", value: 2 },
-  { label: "🍰 Dessert", value: 3 },
-  { label: "🫖 Manual Brew", value: 4 },
-  { label: "💧 Water", value: 5 },
-  { label: "🍽️ Foods", value: 6 },
+  { label: "☕ Tea", value: 1 },
+  { label: "🥤 Coffee", value: 2 },
+  { label: "🥛 Dairy Products", value: 3 },
+  { label: "🍪 Snacks", value: 4 },
+  { label: "🫗 Fresh Juice", value: 5 },
+  { label: "🧃 Juice", value: 6 },
+  { label: "🍨 Ice Cream", value: 7 },
+  { label: "🍨 Karupatti Ice Cream", value: 8 },
+  { label: "🍽️ Karupatti Snacks", value: 9 },
+  { label: "🛒 Others", value: 10 }, // ✅ Final fallback category
 ];
+
+
 
 export default function AddProductForm() {
   const [formData, setFormData] = useState({
@@ -65,6 +71,28 @@ export default function AddProductForm() {
     setImagePreview(base64);
     setFormData((prev) => ({ ...prev, pic: base64 }));
   };
+
+
+  const handleDelete = async (id) => {
+  if (!confirm("Are you sure you want to delete this item?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/menu/delete/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      setAddedItems((prev) => prev.filter((item) => item.id !== id));
+      setMessage("🗑️ Product deleted");
+    } else {
+      const data = await res.json();
+      setMessage("❌ Failed to delete: " + (data?.error || "Unknown error"));
+    }
+  } catch (err) {
+    console.error("❌ Error deleting product:", err);
+    setMessage("❌ Network error while deleting.");
+  }
+};
 
   const resizeImageToSquare = (file, size) => {
     return new Promise((resolve) => {
@@ -330,27 +358,36 @@ export default function AddProductForm() {
       alt={item.name}
       className="h-20 w-20 object-cover rounded mb-2"
     />
-    <div className="font-medium text-black">{item.name}</div>
-    <div className="text-sm text-gray-500">₹{item.price}</div>
-    <button
-      onClick={() => {
-        setFormData({
-          name: item.name,
-          price: item.price,
-          mrp: item.mrp || "",
-          purchaseRate: item.purchaseRate || "",
-          type: item.type || "",
-          pic: item.pic || "",
-          description: item.description || "",
-        });
-        setImagePreview(item.pic || null);
-        setEditItem(item);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }}
-      className="mt-2 text-blue-600 text-sm underline"
-    >
-      ✏️ Edit
-    </button>
+<div className="font-medium text-black">{item.name}</div>
+<div className="text-sm text-gray-500">₹{item.price}</div>
+<div className="flex gap-2 mt-2">
+  <button
+    onClick={() => {
+      setFormData({
+        name: item.name,
+        price: item.price,
+        mrp: item.mrp || "",
+        purchaseRate: item.purchaseRate || "",
+        type: item.type || "",
+        pic: item.pic || "",
+        description: item.description || "",
+      });
+      setImagePreview(item.pic || null);
+      setEditItem(item);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }}
+    className="text-blue-600 text-sm underline"
+  >
+    ✏️ Edit
+  </button>
+
+  <button
+    onClick={() => handleDelete(item.id)}
+    className="text-red-600 text-sm underline"
+  >
+    🗑️ Delete
+  </button>
+</div>
   </div>
 ))}
 
@@ -361,4 +398,4 @@ export default function AddProductForm() {
       )}
     </div>
   );
-}
+}                                             
