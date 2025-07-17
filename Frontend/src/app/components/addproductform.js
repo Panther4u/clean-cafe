@@ -320,39 +320,40 @@ export default function AddProductForm() {
                 {category} ({items.length})
               </h4>
               <div className="grid grid-cols-3 gap-2">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border p-3 rounded shadow-sm flex flex-col items-center text-center"
-                  >
-                    <img
-                      src={item.pic}
-                      alt={item.name}
-                      className="h-20 w-20 object-cover rounded mb-2"
-                    />
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-500">₹{item.price}</div>
-                    <button
-                      onClick={() => {
-                        setFormData({
-                          name: item.name,
-                          price: item.price,
-                          mrp: item.mrp || "",
-                          purchaseRate: item.purchaseRate || "",
-                          type: item.type || "",
-                          pic: item.pic || "",
-                          description: item.description || "",
-                        });
-                        setImagePreview(item.pic || null);
-                        setEditItem(item);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="mt-2 text-blue-600 text-sm underline"
-                    >
-                      ✏️ Edit
-                    </button>
-                  </div>
-                ))}
+{items.map((item) => (
+  <div
+    key={item.id}
+    className="border p-3 rounded shadow-sm flex flex-col items-center text-center"
+  >
+    <img
+      src={item.pic}
+      alt={item.name}
+      className="h-20 w-20 object-cover rounded mb-2"
+    />
+    <div className="font-medium text-black">{item.name}</div>
+    <div className="text-sm text-gray-500">₹{item.price}</div>
+    <button
+      onClick={() => {
+        setFormData({
+          name: item.name,
+          price: item.price,
+          mrp: item.mrp || "",
+          purchaseRate: item.purchaseRate || "",
+          type: item.type || "",
+          pic: item.pic || "",
+          description: item.description || "",
+        });
+        setImagePreview(item.pic || null);
+        setEditItem(item);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+      className="mt-2 text-blue-600 text-sm underline"
+    >
+      ✏️ Edit
+    </button>
+  </div>
+))}
+
               </div>
             </div>
           ))}
