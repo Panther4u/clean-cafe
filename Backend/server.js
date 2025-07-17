@@ -445,6 +445,26 @@ app.get("/menu/all", async (req, res) => {
 });
 
 
+// ✅ Update menu item
+app.put("/menu/update/:id", async (req, res) => {
+  try {
+    const updateData = req.body;
+    const itemId = req.params.id;
+
+    if (!itemId || !updateData) {
+      return res.status(400).json({ error: "Invalid request data" });
+    }
+
+    await db.collection("menu").doc(itemId).update(updateData);
+    console.log("✏️ Product updated:", itemId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Failed to update menu item:", err);
+    res.status(500).json({ error: "Failed to update menu item" });
+  }
+});
+
+
 // ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);

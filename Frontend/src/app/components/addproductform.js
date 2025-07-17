@@ -29,8 +29,8 @@ export default function AddProductForm() {
   const [addedItems, setAddedItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [editItem, setEditItem] = useState(null);
 
-  // ✅ Fetch menu items on page load
   useEffect(() => {
     const fetchMenu = async () => {
       try {
@@ -49,7 +49,6 @@ export default function AddProductForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: ["price", "mrp", "purchaseRate", "type"].includes(name)
@@ -78,7 +77,6 @@ export default function AddProductForm() {
           canvas.height = size;
 
           const ctx = canvas.getContext("2d");
-
           const scale = Math.max(size / img.width, size / img.height);
           const x = (size - img.width * scale) / 2;
           const y = (size - img.height * scale) / 2;
@@ -119,17 +117,34 @@ export default function AddProductForm() {
     };
 
     try {
-      const res = await fetch(`${API_BASE}/menu/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
-      });
+      let res, data;
 
-      const data = await res.json();
+      if (editItem) {
+        res = await fetch(`${API_BASE}/menu/update/${editItem.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(product),
+        });
+      } else {
+        res = await fetch(`${API_BASE}/menu/add`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(product),
+        });
+      }
+
+      data = await res.json();
 
       if (res.ok) {
-        setMessage("✅ Product added successfully!");
-        setAddedItems((prev) => [...prev, data.item]);
+        setMessage(editItem ? "✅ Product updated!" : "✅ Product added!");
+
+        setAddedItems((prev) =>
+          editItem
+            ? prev.map((item) =>
+                item.id === editItem.id ? { ...item, ...product } : item
+              )
+            : [...prev, data.item]
+        );
 
         setFormData({
           name: "",
@@ -141,6 +156,7 @@ export default function AddProductForm() {
           description: "",
         });
         setImagePreview(null);
+        setEditItem(null);
       } else {
         setMessage("❌ Failed: " + (data?.error || "Something went wrong"));
       }
@@ -155,7 +171,8 @@ export default function AddProductForm() {
   const groupedByCategory = () => {
     const groups = {};
     for (const item of addedItems) {
-      const category = menusType.find((m) => m.value === item.type)?.label || "Other";
+      const category =
+        menusType.find((m) => m.value === item.type)?.label || "Other";
       if (!groups[category]) groups[category] = [];
       groups[category].push(item);
     }
@@ -164,9 +181,10 @@ export default function AddProductForm() {
 
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded mt-6 font-sans">
-      <h2 className="text-xl font-semibold mb-4 text-center">➕ Add New Product</h2>
+      <h2 className="text-xl font-semibold mb-4 text-center">
+        {editItem ? "✏️ Edit Product" : "➕ Add New Product"}
+      </h2>
 
-      {/* Add Product Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
@@ -230,7 +248,7 @@ export default function AddProductForm() {
 
         {imagePreview && (
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-1">Image Preview (2767x2767):</p>
+            <p className="text-sm text-gray-500 mb-1">Image Preview:</p>
             <img
               src={imagePreview}
               alt="Preview"
@@ -252,23 +270,55 @@ export default function AddProductForm() {
           disabled={loading}
           className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
         >
-          {loading ? "Adding..." : "Add Product"}
+          {loading
+            ? editItem
+              ? "Updating..."
+              : "Adding..."
+            : editItem
+            ? "Update Product"
+            : "Add Product"}
         </button>
+
+        {editItem && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditItem(null);
+              setFormData({
+                name: "",
+                price: "",
+                mrp: "",
+                purchaseRate: "",
+                type: "",
+                pic: "",
+                description: "",
+              });
+              setImagePreview(null);
+            }}
+            className="w-full text-red-500 py-2 rounded hover:underline"
+          >
+            Cancel Edit
+          </button>
+        )}
 
         {message && <p className="text-sm mt-2 text-center">{message}</p>}
       </form>
 
-      {/* Show Added Products Below */}
       {addedItems.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-1 text-center">🧾 Recently Added Products</h3>
+          <h3 className="text-lg font-semibold mb-1 text-center">
+            🧾 Recently Added Products
+          </h3>
           <p className="text-sm text-center text-gray-600 mb-2">
-            Total: {addedItems.length} item{addedItems.length !== 1 ? "s" : ""}
+            Total: {addedItems.length} item
+            {addedItems.length !== 1 ? "s" : ""}
           </p>
 
           {Object.entries(groupedByCategory()).map(([category, items]) => (
             <div key={category} className="mb-4">
-              <h4 className="font-bold text-gray-700 mb-2">{category} ({items.length})</h4>
+              <h4 className="font-bold text-gray-700 mb-2">
+                {category} ({items.length})
+              </h4>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((item) => (
                   <div
@@ -282,6 +332,25 @@ export default function AddProductForm() {
                     />
                     <div className="font-medium">{item.name}</div>
                     <div className="text-sm text-gray-500">₹{item.price}</div>
+                    <button
+                      onClick={() => {
+                        setFormData({
+                          name: item.name,
+                          price: item.price,
+                          mrp: item.mrp || "",
+                          purchaseRate: item.purchaseRate || "",
+                          type: item.type || "",
+                          pic: item.pic || "",
+                          description: item.description || "",
+                        });
+                        setImagePreview(item.pic || null);
+                        setEditItem(item);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="mt-2 text-blue-600 text-sm underline"
+                    >
+                      ✏️ Edit
+                    </button>
                   </div>
                 ))}
               </div>
