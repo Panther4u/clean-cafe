@@ -664,36 +664,41 @@ app.put("/menu/update/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update menu item" });
   }
 });
+
+// 👉 Combine image upload + update product in one go
 app.put("/menu/update-with-image/:id", upload.single("image"), async (req, res) => {
   try {
     const itemId = req.params.id;
-    let updateData = JSON.parse(req.body.data || "{}");
+    const updateData = JSON.parse(req.body.data || "{}");
 
     if (!itemId || !updateData) {
       return res.status(400).json({ error: "Invalid request" });
     }
 
+    // If an image file was uploaded, save and use its URL
     if (req.file) {
       const bucket = getStorage().bucket();
-      const fileName = `menu/${Date.now()}-${req.file.originalname}`;
-      const file = bucket.file(fileName);
+      const filename = `menu/${Date.now()}-${req.file.originalname}`;
+      const file = bucket.file(filename);
 
       await file.save(req.file.buffer, {
         contentType: req.file.mimetype,
       });
 
       await file.makePublic();
-
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
       updateData.imageUrl = publicUrl;
+      console.log(`📤 New image uploaded: ${publicUrl}`);
     }
 
+    // Save updates to Firestore
     await db.collection("menu").doc(itemId).update(updateData);
-    console.log("✅ Updated product with image:", itemId);
-    res.json({ success: true });
+    console.log(`✅ Product ${itemId} updated (with image if uploaded)`);
+
+    return res.json({ success: true });
   } catch (err) {
-    console.error("❌ Failed to update with image:", err.message);
-    res.status(500).json({ error: "Update failed", details: err.message });
+    console.error("❌ Failed update-with-image:", err.message, err.stack);
+    return res.status(500).json({ error: "Update failed", details: err.message });
   }
 });
 

@@ -6,16 +6,16 @@ import Image from "next/image";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 const menusType = [
-  { label: "\u2615 Tea", value: 1 },
-  { label: "\ud83e\udd64 Coffee", value: 2 },
-  { label: "\ud83e\ud5bb Dairy Products", value: 3 },
-  { label: "\ud83c\udf6a Snacks", value: 4 },
-  { label: "\ud83e\ude97 Fresh Juice", value: 5 },
-  { label: "\ud83e\udd43 Juice", value: 6 },
-  { label: "\ud83c\udf68 Ice Cream", value: 7 },
-  { label: "\ud83c\udf68 Karupatti Ice Cream", value: 8 },
-  { label: "\ud83c\udf7d\ufe0f Karupatti Snacks", value: 9 },
-  { label: "\ud83d\uded2 Others", value: 10 },
+  { label: "☕ Tea", value: 1 },
+  { label: "🥤 Coffee", value: 2 },
+  { label: "🥛 Dairy Products", value: 3 },
+  { label: "🍪 Snacks", value: 4 },
+  { label: "🫗 Fresh Juice", value: 5 },
+  { label: "🧃 Juice", value: 6 },
+  { label: "🍨 Ice Cream", value: 7 },
+  { label: "🍨 Karupatti Ice Cream", value: 8 },
+  { label: "🍽️ Karupatti Snacks", value: 9 },
+  { label: "🛒 Others", value: 10 },
 ];
 
 export default function AddProductForm({ onProductAdded }) {
@@ -25,15 +25,16 @@ export default function AddProductForm({ onProductAdded }) {
     mrp: "",
     purchaseRate: "",
     type: "",
-    image: null,
     description: "",
+    image: null,
+    imageUrl: "",
   });
 
   const [imagePreview, setImagePreview] = useState(null);
   const [addedItems, setAddedItems] = useState([]);
+  const [editItem, setEditItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
     fetchMenu();
@@ -43,9 +44,9 @@ export default function AddProductForm({ onProductAdded }) {
     try {
       const res = await fetch(`${API_BASE}/menu/all`);
       const data = await res.json();
-      if (Array.isArray(data)) setAddedItems(data);
+      setAddedItems(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("\u274c Failed to fetch menu items", err);
+      console.error("❌ Failed to fetch menu:", err);
     }
   };
 
@@ -53,9 +54,7 @@ export default function AddProductForm({ onProductAdded }) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: ["price", "mrp", "purchaseRate", "type"].includes(name)
-        ? Number(value)
-        : value,
+      [name]: ["price", "mrp", "purchaseRate", "type"].includes(name) ? Number(value) : value,
     }));
   };
 
@@ -74,32 +73,49 @@ export default function AddProductForm({ onProductAdded }) {
     try {
       let res;
 
+      // EDIT MODE
       if (editItem) {
-        const updateForm = new FormData();
-        if (formData.image) updateForm.append("image", formData.image);
-        updateForm.append("data", JSON.stringify({
-          name: formData.name,
-          price: formData.price,
-          mrp: formData.mrp,
-          purchaseRate: formData.purchaseRate,
-          type: formData.type,
-          description: formData.description,
-        }));
+        if (formData.image) {
+          const updateForm = new FormData();
+          updateForm.append("image", formData.image);
+          updateForm.append("data", JSON.stringify({
+            name: formData.name,
+            price: formData.price,
+            mrp: formData.mrp,
+            purchaseRate: formData.purchaseRate,
+            type: formData.type,
+            description: formData.description,
+          }));
 
-        res = await fetch(`${API_BASE}/menu/update-with-image/${editItem.id}`, {
-          method: "PUT",
-          body: updateForm,
-        });
-      } else {
-        const imageUpload = new FormData();
-        imageUpload.append("image", formData.image);
-        const imgRes = await fetch(`${API_BASE}/menu/upload`, {
-          method: "POST",
-          body: imageUpload,
-        });
+          res = await fetch(`${API_BASE}/menu/update-with-image/${editItem.id}`, {
+            method: "PUT",
+            body: updateForm,
+          });
+        } else {
+          res = await fetch(`${API_BASE}/menu/update/${editItem.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: formData.name,
+              price: formData.price,
+              mrp: formData.mrp,
+              purchaseRate: formData.purchaseRate,
+              type: formData.type,
+              description: formData.description,
+            }),
+          });
+        }
+      }
+      // ADD MODE
+      else {
+        // 1. Upload image
+        const imageForm = new FormData();
+        imageForm.append("image", formData.image);
+        const imgRes = await fetch(`${API_BASE}/menu/upload`, { method: "POST", body: imageForm });
         const imgData = await imgRes.json();
         if (!imgData.success) throw new Error("Image upload failed");
 
+        // 2. Create product
         const product = {
           ...formData,
           imageUrl: imgData.imageUrl,
@@ -115,25 +131,21 @@ export default function AddProductForm({ onProductAdded }) {
         });
       }
 
-      const data = await res.json();
+      const result = await res.json();
       if (res.ok) {
-        setMessage(editItem ? "\u2705 Product updated!" : "\u2705 Product added!");
-        setAddedItems((prev) =>
-          editItem
-            ? prev.map((item) => (item.id === editItem.id ? { ...item, ...formData } : item))
-            : [...prev, data.item]
-        );
-        if (onProductAdded && !editItem) onProductAdded(data.item);
+        setMessage(editItem ? "✅ Product updated!" : "✅ Product added!");
+        fetchMenu();
+        if (onProductAdded) onProductAdded(result.item);
         resetForm();
       } else {
-        setMessage("\u274c Failed: " + (data?.error || "Something went wrong"));
+        setMessage("❌ Failed: " + (result?.error || "Unknown error"));
       }
     } catch (err) {
-      console.error(err);
-      setMessage("\u274c Network error.");
+      console.error("❌ Submit error:", err);
+      setMessage("❌ Something went wrong.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const resetForm = () => {
@@ -143,27 +155,24 @@ export default function AddProductForm({ onProductAdded }) {
       mrp: "",
       purchaseRate: "",
       type: "",
-      image: null,
       description: "",
+      image: null,
+      imageUrl: "",
     });
-    setImagePreview(null);
     setEditItem(null);
+    setImagePreview(null);
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this item?")) return;
+    if (!confirm("Delete this product?")) return;
     try {
       const res = await fetch(`${API_BASE}/menu/delete/${id}`, { method: "DELETE" });
       if (res.ok) {
         setAddedItems((prev) => prev.filter((item) => item.id !== id));
-        setMessage("\ud83d\uddd1\ufe0f Product deleted.");
-      } else {
-        const data = await res.json();
-        setMessage("\u274c Failed to delete: " + (data?.error || "Unknown error"));
+        setMessage("🗑️ Product deleted.");
       }
     } catch (err) {
-      console.error(err);
-      setMessage("\u274c Network error while deleting.");
+      console.error("❌ Delete error:", err);
     }
   };
 
@@ -180,21 +189,19 @@ export default function AddProductForm({ onProductAdded }) {
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded mt-6 font-sans">
       <h2 className="text-xl font-semibold mb-4 text-center text-black">
-        {editItem ? "\u270f\ufe0f Edit Product" : "\u2795 Add New Product"}
+        {editItem ? "✏️ Edit Product" : "➕ Add New Product"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} required className="w-full border px-3 py-2 rounded" />
         <input name="price" type="number" placeholder="Selling Price" value={formData.price} onChange={handleChange} required className="w-full border px-3 py-2 rounded" />
-        <input name="mrp" type="number" placeholder="MRP (optional)" value={formData.mrp} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
-        <input name="purchaseRate" type="number" placeholder="Purchase Rate (optional)" value={formData.purchaseRate} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
+        <input name="mrp" type="number" placeholder="MRP" value={formData.mrp} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
+        <input name="purchaseRate" type="number" placeholder="Purchase Rate" value={formData.purchaseRate} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
 
         <select name="type" value={formData.type} onChange={handleChange} required className="w-full border px-3 py-2 rounded text-black">
           <option value="">Select Category</option>
           {menusType.map((cat) => (
-            <option key={cat.value} value={cat.value} className="text-black">
-              {cat.label}
-            </option>
+            <option key={cat.value} value={cat.value}>{cat.label}</option>
           ))}
         </select>
 
@@ -206,66 +213,49 @@ export default function AddProductForm({ onProductAdded }) {
           </div>
         )}
 
-        <textarea name="description" placeholder="Description (optional)" value={formData.description} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
+        <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
 
         <button type="submit" disabled={loading} className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition">
           {loading ? (editItem ? "Updating..." : "Adding...") : editItem ? "Update Product" : "Add Product"}
         </button>
 
         {editItem && (
-          <button type="button" onClick={resetForm} className="w-full text-red-500 py-2 rounded hover:underline">
-            Cancel Edit
-          </button>
+          <button type="button" onClick={resetForm} className="w-full text-red-500 py-2 rounded hover:underline">Cancel Edit</button>
         )}
 
-        {message && <p className="text-sm mt-2 text-center">{message}</p>}
+        {message && <p className="text-center text-sm mt-2">{message}</p>}
       </form>
 
-      {addedItems.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2 text-center">\ud83d\udcdf Products</h3>
-          {Object.entries(groupedByCategory()).map(([category, items]) => (
-            <div key={category} className="mb-4">
-              <h4 className="font-bold text-gray-700 mb-2">
-                {category} ({items.length})
-              </h4>
-              <div className="grid grid-cols-3 gap-2">
-                {items.map((item) => (
-                  <div key={item.id} className="border p-3 rounded shadow-sm text-center">
-                    <Image src={item.imageUrl || "/placeholder.jpg"} alt={item.name} width={80} height={80} className="rounded mb-2 object-cover mx-auto" />
-                    <div className="text-black font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-500">\u20b9{item.price}</div>
-                    <div className="flex justify-center gap-3 mt-2 text-sm">
-                      <button
-                        onClick={() => {
-                          setEditItem(item);
-                          setFormData({
-                            name: item.name,
-                            price: item.price,
-                            mrp: item.mrp || "",
-                            purchaseRate: item.purchaseRate || "",
-                            type: item.type || "",
-                            image: null,
-                            description: item.description || "",
-                          });
-                          setImagePreview(item.imageUrl);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className="text-blue-600 underline"
-                      >
-                        \u270f\ufe0f Edit
-                      </button>
-                      <button onClick={() => handleDelete(item.id)} className="text-red-600 underline">
-                        \ud83d\uddd1\ufe0f Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+      <hr className="my-6" />
+
+      {Object.entries(groupedByCategory()).map(([category, items]) => (
+        <div key={category} className="mb-6">
+          <h3 className="text-lg font-semibold text-black mb-2">{category} ({items.length})</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {items.map((item) => (
+              <div key={item.id} className="border p-3 rounded text-center shadow">
+                <Image src={item.imageUrl || "/placeholder.jpg"} width={80} height={80} alt={item.name} className="rounded object-cover mx-auto mb-2" />
+                <p className="font-medium text-black">{item.name}</p>
+                <p className="text-sm text-gray-500">₹{item.price}</p>
+                <div className="flex justify-center gap-3 mt-2 text-sm">
+                  <button onClick={() => {
+                    setEditItem(item);
+                    setFormData({
+                      ...item,
+                      image: null,
+                      imageUrl: item.imageUrl || "",
+                    });
+                    setImagePreview(item.imageUrl);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }} className="text-blue-600 underline">✏️ Edit</button>
+
+                  <button onClick={() => handleDelete(item.id)} className="text-red-600 underline">🗑️ Delete</button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
