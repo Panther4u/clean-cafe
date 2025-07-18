@@ -6,16 +6,16 @@ import Image from "next/image";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 const menusType = [
-  { label: "☕ Tea", value: 1 },
-  { label: "🥤 Coffee", value: 2 },
-  { label: "🥛 Dairy Products", value: 3 },
-  { label: "🍪 Snacks", value: 4 },
-  { label: "🫗 Fresh Juice", value: 5 },
-  { label: "🧃 Juice", value: 6 },
-  { label: "🍨 Ice Cream", value: 7 },
-  { label: "🍨 Karupatti Ice Cream", value: 8 },
-  { label: "🍽️ Karupatti Snacks", value: 9 },
-  { label: "🛒 Others", value: 10 },
+  { label: "\u2615 Tea", value: 1 },
+  { label: "\ud83e\udd64 Coffee", value: 2 },
+  { label: "\ud83e\ud5bb Dairy Products", value: 3 },
+  { label: "\ud83c\udf6a Snacks", value: 4 },
+  { label: "\ud83e\ude97 Fresh Juice", value: 5 },
+  { label: "\ud83e\udd43 Juice", value: 6 },
+  { label: "\ud83c\udf68 Ice Cream", value: 7 },
+  { label: "\ud83c\udf68 Karupatti Ice Cream", value: 8 },
+  { label: "\ud83c\udf7d\ufe0f Karupatti Snacks", value: 9 },
+  { label: "\ud83d\uded2 Others", value: 10 },
 ];
 
 export default function AddProductForm({ onProductAdded }) {
@@ -25,7 +25,7 @@ export default function AddProductForm({ onProductAdded }) {
     mrp: "",
     purchaseRate: "",
     type: "",
-    imageUrl: "",
+    image: null,
     description: "",
   });
 
@@ -45,7 +45,7 @@ export default function AddProductForm({ onProductAdded }) {
       const data = await res.json();
       if (Array.isArray(data)) setAddedItems(data);
     } catch (err) {
-      console.error("❌ Failed to fetch menu items", err);
+      console.error("\u274c Failed to fetch menu items", err);
     }
   };
 
@@ -59,29 +59,11 @@ export default function AddProductForm({ onProductAdded }) {
     }));
   };
 
-  const handleImageChange = async (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    const formDataUpload = new FormData();
-    formDataUpload.append("image", file);
-
-    try {
-      const res = await fetch(`${API_BASE}/menu/upload`, {
-        method: "POST",
-        body: formDataUpload,
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
-        setImagePreview(data.imageUrl);
-      } else {
-        alert("❌ Failed to upload image");
-      }
-    } catch (err) {
-      console.error("❌ Image upload error:", err);
-    }
+    setFormData((prev) => ({ ...prev, image: file }));
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -89,22 +71,43 @@ export default function AddProductForm({ onProductAdded }) {
     setLoading(true);
     setMessage("");
 
-    const product = {
-      ...formData,
-      amount: 0,
-      favorite: false,
-      notes: "",
-    };
-
     try {
       let res;
+
       if (editItem) {
-        res = await fetch(`${API_BASE}/menu/update/${editItem.id}`, {
+        const updateForm = new FormData();
+        if (formData.image) updateForm.append("image", formData.image);
+        updateForm.append("data", JSON.stringify({
+          name: formData.name,
+          price: formData.price,
+          mrp: formData.mrp,
+          purchaseRate: formData.purchaseRate,
+          type: formData.type,
+          description: formData.description,
+        }));
+
+        res = await fetch(`${API_BASE}/menu/update-with-image/${editItem.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(product),
+          body: updateForm,
         });
       } else {
+        const imageUpload = new FormData();
+        imageUpload.append("image", formData.image);
+        const imgRes = await fetch(`${API_BASE}/menu/upload`, {
+          method: "POST",
+          body: imageUpload,
+        });
+        const imgData = await imgRes.json();
+        if (!imgData.success) throw new Error("Image upload failed");
+
+        const product = {
+          ...formData,
+          imageUrl: imgData.imageUrl,
+          amount: 0,
+          favorite: false,
+          notes: "",
+        };
+
         res = await fetch(`${API_BASE}/menu/add`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -114,21 +117,20 @@ export default function AddProductForm({ onProductAdded }) {
 
       const data = await res.json();
       if (res.ok) {
-        setMessage(editItem ? "✅ Product updated!" : "✅ Product added!");
+        setMessage(editItem ? "\u2705 Product updated!" : "\u2705 Product added!");
         setAddedItems((prev) =>
           editItem
-            ? prev.map((item) => (item.id === editItem.id ? { ...item, ...product } : item))
+            ? prev.map((item) => (item.id === editItem.id ? { ...item, ...formData } : item))
             : [...prev, data.item]
         );
         if (onProductAdded && !editItem) onProductAdded(data.item);
-
         resetForm();
       } else {
-        setMessage("❌ Failed: " + (data?.error || "Something went wrong"));
+        setMessage("\u274c Failed: " + (data?.error || "Something went wrong"));
       }
     } catch (err) {
       console.error(err);
-      setMessage("❌ Network error.");
+      setMessage("\u274c Network error.");
     }
 
     setLoading(false);
@@ -141,7 +143,7 @@ export default function AddProductForm({ onProductAdded }) {
       mrp: "",
       purchaseRate: "",
       type: "",
-      imageUrl: "",
+      image: null,
       description: "",
     });
     setImagePreview(null);
@@ -154,14 +156,14 @@ export default function AddProductForm({ onProductAdded }) {
       const res = await fetch(`${API_BASE}/menu/delete/${id}`, { method: "DELETE" });
       if (res.ok) {
         setAddedItems((prev) => prev.filter((item) => item.id !== id));
-        setMessage("🗑️ Product deleted.");
+        setMessage("\ud83d\uddd1\ufe0f Product deleted.");
       } else {
         const data = await res.json();
-        setMessage("❌ Failed to delete: " + (data?.error || "Unknown error"));
+        setMessage("\u274c Failed to delete: " + (data?.error || "Unknown error"));
       }
     } catch (err) {
       console.error(err);
-      setMessage("❌ Network error while deleting.");
+      setMessage("\u274c Network error while deleting.");
     }
   };
 
@@ -178,7 +180,7 @@ export default function AddProductForm({ onProductAdded }) {
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded mt-6 font-sans">
       <h2 className="text-xl font-semibold mb-4 text-center text-black">
-        {editItem ? "✏️ Edit Product" : "➕ Add New Product"}
+        {editItem ? "\u270f\ufe0f Edit Product" : "\u2795 Add New Product"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -221,7 +223,7 @@ export default function AddProductForm({ onProductAdded }) {
 
       {addedItems.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2 text-center">🧾 Products</h3>
+          <h3 className="text-lg font-semibold mb-2 text-center">\ud83d\udcdf Products</h3>
           {Object.entries(groupedByCategory()).map(([category, items]) => (
             <div key={category} className="mb-4">
               <h4 className="font-bold text-gray-700 mb-2">
@@ -232,7 +234,7 @@ export default function AddProductForm({ onProductAdded }) {
                   <div key={item.id} className="border p-3 rounded shadow-sm text-center">
                     <Image src={item.imageUrl || "/placeholder.jpg"} alt={item.name} width={80} height={80} className="rounded mb-2 object-cover mx-auto" />
                     <div className="text-black font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-500">₹{item.price}</div>
+                    <div className="text-sm text-gray-500">\u20b9{item.price}</div>
                     <div className="flex justify-center gap-3 mt-2 text-sm">
                       <button
                         onClick={() => {
@@ -243,7 +245,7 @@ export default function AddProductForm({ onProductAdded }) {
                             mrp: item.mrp || "",
                             purchaseRate: item.purchaseRate || "",
                             type: item.type || "",
-                            imageUrl: item.imageUrl || "",
+                            image: null,
                             description: item.description || "",
                           });
                           setImagePreview(item.imageUrl);
@@ -251,10 +253,10 @@ export default function AddProductForm({ onProductAdded }) {
                         }}
                         className="text-blue-600 underline"
                       >
-                        ✏️ Edit
+                        \u270f\ufe0f Edit
                       </button>
                       <button onClick={() => handleDelete(item.id)} className="text-red-600 underline">
-                        🗑️ Delete
+                        \ud83d\uddd1\ufe0f Delete
                       </button>
                     </div>
                   </div>

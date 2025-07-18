@@ -135,7 +135,11 @@ try {
   console.error("❌ Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON from .env");
   process.exit(1);
 }
-initializeApp({ credential: cert(serviceAccount) });
+initializeApp({
+  credential: cert(serviceAccount),
+  storageBucket: "sri-kandhan-s-cafe.appspot.com", // ✅ Use your real bucket name here
+});
+
 const db = getFirestore();
 
 const app = express();
@@ -658,6 +662,38 @@ app.put("/menu/update/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Failed to update menu item:", err);
     res.status(500).json({ error: "Failed to update menu item" });
+  }
+});
+app.put("/menu/update-with-image/:id", upload.single("image"), async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    let updateData = JSON.parse(req.body.data || "{}");
+
+    if (!itemId || !updateData) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    if (req.file) {
+      const bucket = getStorage().bucket();
+      const fileName = `menu/${Date.now()}-${req.file.originalname}`;
+      const file = bucket.file(fileName);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+      });
+
+      await file.makePublic();
+
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      updateData.imageUrl = publicUrl;
+    }
+
+    await db.collection("menu").doc(itemId).update(updateData);
+    console.log("✅ Updated product with image:", itemId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Failed to update with image:", err.message);
+    res.status(500).json({ error: "Update failed", details: err.message });
   }
 });
 
