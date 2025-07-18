@@ -578,11 +578,6 @@ app.put("/receipts/update/:id", async (req, res) => {
   }
 });
 
-// ✅ Serve static menu
-const menuData = require("./menu.json");
-app.get("/menu", (req, res) => {
-  res.json(menuData.menu || []);
-});
 
 // ✅ Admin password verification
 app.post("/admin/verify-password", (req, res) => {
@@ -672,7 +667,13 @@ app.delete("/menu/delete/:id", async (req, res) => {
   }
 });
 
-
+// Before all routes
+app.use((req, res, next) => {
+  if (req.url.startsWith("/menu")) {
+    console.log("🌐 Request from origin:", req.headers.origin);
+  }
+  next();
+});
 // ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);

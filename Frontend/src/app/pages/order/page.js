@@ -469,8 +469,6 @@
 //   );
 // }
 
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -479,7 +477,7 @@ import { motion as m } from "framer-motion";
 import Header from "../../components/header";
 import { TabMenu } from "@/app/components/tabmenu";
 import { MenuCards } from "@/app/components/menucards";
-import { Spinner, Button } from "flowbite-react";
+import { Spinner } from "flowbite-react";
 import { Footer } from "@/app/components/footer";
 import { ModalCard } from "@/app/components/modalcard";
 import { PaymentCard } from "@/app/components/paymentcard";
@@ -513,6 +511,7 @@ function Order() {
   const [currentPage, setCurrentPage] = useState(0);
   const [menuCards, setMenuCards] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [menuLoaded, setMenuLoaded] = useState(false);
   const [detailModal, setDetailModal] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -521,52 +520,47 @@ function Order() {
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  // ✅ Load menu items with caching
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const cached = localStorage.getItem("menuCache");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          const initialized = parsed.map(item => ({ ...item, amount: 0, notes: "" }));
-          setAllItems(initialized);
-          setItemsOrder(initialized);
-          setIsLoading(false);
-        } else {
-          const res = await fetch(`${API_BASE}/menu/all`);
-          const data = await res.json();
-          localStorage.setItem("menuCache", JSON.stringify(data));
-          const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
-          setAllItems(initialized);
-          setItemsOrder(initialized);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error("Failed to fetch menu items:", err);
-        setIsLoading(false);
-      }
-    };
+const fetchItems = async () => {
+  try {
+    const cached = localStorage.getItem("menuCache");
+    const cacheExpiry = localStorage.getItem("menuCacheExpiry");
 
-    fetchItems();
-  }, []);
-
-  // ✅ Refresh menu (optional button)
-  const refreshMenu = async () => {
-    try {
-      localStorage.removeItem("menuCache");
-      setIsLoading(true);
-      const res = await fetch(`${API_BASE}/menu/all`);
-      const data = await res.json();
-      localStorage.setItem("menuCache", JSON.stringify(data));
-      const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+    if (cached && cacheExpiry && Date.now() < parseInt(cacheExpiry)) {
+      const parsed = JSON.parse(cached);
+      const initialized = parsed.map(item => ({ ...item, amount: 0, notes: "" }));
       setAllItems(initialized);
       setItemsOrder(initialized);
-    } catch (error) {
-      console.error("Failed to refresh menu:", error);
-    } finally {
       setIsLoading(false);
+      return;
     }
-  };
+
+    const res = await fetch(`${API_BASE}/menu/all`);
+    const data = await res.json();
+
+    // ✅ Only keep essential fields
+    const minimalData = data.map(({ id, name, price, type, imageUrl }) => ({
+      id,
+      name,
+      price,
+      type,
+      imageUrl,
+    }));
+
+    localStorage.setItem("menuCache", JSON.stringify(minimalData));
+    localStorage.setItem("menuCacheExpiry", `${Date.now() + 30 * 60 * 1000}`);
+
+    const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+    setAllItems(initialized);
+    setItemsOrder(initialized);
+  } catch (err) {
+    console.error("❌ Failed to fetch menu items:", err);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
 
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
@@ -578,9 +572,7 @@ function Order() {
   }, [discountAmount]);
 
   useEffect(() => {
-    if (searchText && currentPage !== 0) {
-      setCurrentPage(0);
-    }
+    if (searchText && currentPage !== 0) setCurrentPage(0);
   }, [searchText]);
 
   const tabMenuHandler = (e) => {
@@ -589,13 +581,9 @@ function Order() {
   };
 
   const plusButtonHandler = (_e, id) => {
-    const updated = itemsOrder.map((item) => {
+    const updated = itemsOrder.map(item => {
       if (item.id === id) {
-        setTotalPrice((t) => ({
-          ...t,
-          amount: t.amount + item.price,
-          length: t.length + 1,
-        }));
+        setTotalPrice(t => ({ ...t, amount: t.amount + item.price, length: t.length + 1 }));
         setDiscountAmount(0);
         return { ...item, amount: item.amount + 1 };
       }
@@ -605,13 +593,9 @@ function Order() {
   };
 
   const minusButtonHandler = (_e, id) => {
-    const updated = itemsOrder.map((item) => {
+    const updated = itemsOrder.map(item => {
       if (item.id === id && item.amount > 0) {
-        setTotalPrice((t) => ({
-          ...t,
-          amount: t.amount - item.price,
-          length: t.length - 1,
-        }));
+        setTotalPrice(t => ({ ...t, amount: t.amount - item.price, length: t.length - 1 }));
         setDiscountAmount(0);
         return { ...item, amount: item.amount - 1 };
       }
@@ -641,10 +625,8 @@ function Order() {
     if (found) setDetailModal(found);
   };
 
-  const closeModal = (e, modalId) => {
-    const updated = itemsOrder.map(item =>
-      item.id === modalId ? { ...item, notes: detailModal?.notes } : item
-    );
+  const closeModal = (_e, modalId) => {
+    const updated = itemsOrder.map(item => item.id === modalId ? { ...item, notes: detailModal?.notes } : item);
     setItemsOrder(updated);
     setOpenModal(false);
   };
@@ -660,9 +642,7 @@ function Order() {
     setDone(true);
   };
 
-  const handleChange = (e) => {
-    setRadioChecked(e.target.value);
-  };
+  const handleChange = (e) => setRadioChecked(e.target.value);
 
   const resetOrderState = () => {
     const reset = allItems.map(item => ({ ...item, amount: 0, notes: "" }));
@@ -676,28 +656,14 @@ function Order() {
     setSearchText("");
   };
 
-  const handleProductAdded = (newItem) => {
-    const extended = [...allItems, { ...newItem, amount: 0, notes: "" }];
-    setAllItems(extended);
-    setItemsOrder(extended);
-    // ✅ Optional: update cache immediately
-    localStorage.setItem("menuCache", JSON.stringify(extended));
-  };
-
-  const filteredItems = allItems.map(item => {
+  const filteredItems = allItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase());
     const matchesType = menuCards == 0 || item.type === parseInt(menuCards);
-    const show = searchText.length > 0 ? matchesSearch : matchesType;
-
-    if (!show) return null;
-
+    return searchText.length > 0 ? matchesSearch : matchesType;
+  }).map(item => {
     const matchedOrder = itemsOrder.find(o => o.id === item.id);
-    return {
-      ...item,
-      amount: matchedOrder?.amount || 0,
-      notes: matchedOrder?.notes || "",
-    };
-  }).filter(Boolean);
+    return { ...item, amount: matchedOrder?.amount || 0, notes: matchedOrder?.notes || "" };
+  });
 
   return (
     <>
@@ -719,27 +685,19 @@ function Order() {
               allMenuItems={allItems}
             />
 
-            {totalPrice.length !== 0 && (
-              <Footer page={currentPage} totalPrice={totalPrice} onClick={footerHandler} />
-            )}
+            {totalPrice.length !== 0 && <Footer page={currentPage} totalPrice={totalPrice} onClick={footerHandler} />}
 
             <div className="w-screen min-h-screen mt-[52px] bg-white">
-              <div className="w-full max-w-md md:max-w-4xl mx-auto p-3 pb-[62px] space-y-3 overflow-auto md:overflow-visible">
-
+              <div className="w-full max-w-md md:max-w-4xl mx-auto p-3 pb-[62px] space-y-3">
                 {currentPage === 0 && (
                   <>
                     <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
-                    {isLoading ? (
+                    {!menuLoaded ? (
                       <div className="flex h-screen items-center justify-center">
                         <Spinner color="success" />
                       </div>
                     ) : (
-                      <m.div
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
+                      <m.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5">
                         {filteredItems.map((data, idx) => (
                           <MenuCards
                             key={idx}
@@ -774,7 +732,12 @@ function Order() {
                 {currentPage === 3 && (
                   <div className="p-4 max-w-xl mx-auto">
                     <h1 className="text-xl font-bold mb-4">Add New Product</h1>
-                    <AddProductForm onProductAdded={handleProductAdded} />
+                    <AddProductForm onProductAdded={(newItem) => {
+                      const extended = [...allItems, { ...newItem, amount: 0, notes: "" }];
+                      setAllItems(extended);
+                      setItemsOrder(extended);
+                      localStorage.setItem("menuCache", JSON.stringify(extended));
+                    }} />
                   </div>
                 )}
 
@@ -793,7 +756,6 @@ function Order() {
 }
 
 export default withAdminAuth(Order);
-
 
 
 
