@@ -6,6 +6,9 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    domains: ["firebasestorage.googleapis.com"],
+  },
   webpack(config) {
     config.experiments = {
       ...(config.experiments || {}),

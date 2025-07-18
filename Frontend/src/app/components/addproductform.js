@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-const TARGET_SIZE = 2767;
 
 const menusType = [
   { label: "☕ Tea", value: 1 },
@@ -26,9 +25,10 @@ export default function AddProductForm({ onProductAdded }) {
     mrp: "",
     purchaseRate: "",
     type: "",
-    pic: "",
+    imageUrl: "",
     description: "",
   });
+
   const [imagePreview, setImagePreview] = useState(null);
   const [addedItems, setAddedItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,20 +36,18 @@ export default function AddProductForm({ onProductAdded }) {
   const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/menu/all`);
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setAddedItems(data);
-        }
-      } catch (err) {
-        console.error("❌ Failed to fetch menu items", err);
-      }
-    };
-
     fetchMenu();
   }, []);
+
+  const fetchMenu = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/menu/all`);
+      const data = await res.json();
+      if (Array.isArray(data)) setAddedItems(data);
+    } catch (err) {
+      console.error("❌ Failed to fetch menu items", err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,36 +59,29 @@ export default function AddProductForm({ onProductAdded }) {
     }));
   };
 
-  const resizeImageToSquare = (file, size) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new window.Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext("2d");
-          const scale = Math.max(size / img.width, size / img.height);
-          const x = (size - img.width * scale) / 2;
-          const y = (size - img.height * scale) / 2;
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(0, 0, size, size);
-          ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width * scale, img.height * scale);
-          resolve(canvas.toDataURL("image/jpeg", 0.9));
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const base64 = await resizeImageToSquare(file, TARGET_SIZE);
-    setImagePreview(base64);
-    setFormData((prev) => ({ ...prev, pic: base64 }));
+
+    const formDataUpload = new FormData();
+    formDataUpload.append("image", file);
+
+    try {
+      const res = await fetch(`${API_BASE}/menu/upload`, {
+        method: "POST",
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
+        setImagePreview(data.imageUrl);
+      } else {
+        alert("❌ Failed to upload image");
+      }
+    } catch (err) {
+      console.error("❌ Image upload error:", err);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -122,7 +113,6 @@ export default function AddProductForm({ onProductAdded }) {
       }
 
       const data = await res.json();
-
       if (res.ok) {
         setMessage(editItem ? "✅ Product updated!" : "✅ Product added!");
         setAddedItems((prev) =>
@@ -132,17 +122,7 @@ export default function AddProductForm({ onProductAdded }) {
         );
         if (onProductAdded && !editItem) onProductAdded(data.item);
 
-        setFormData({
-          name: "",
-          price: "",
-          mrp: "",
-          purchaseRate: "",
-          type: "",
-          pic: "",
-          description: "",
-        });
-        setImagePreview(null);
-        setEditItem(null);
+        resetForm();
       } else {
         setMessage("❌ Failed: " + (data?.error || "Something went wrong"));
       }
@@ -152,6 +132,20 @@ export default function AddProductForm({ onProductAdded }) {
     }
 
     setLoading(false);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      price: "",
+      mrp: "",
+      purchaseRate: "",
+      type: "",
+      imageUrl: "",
+      description: "",
+    });
+    setImagePreview(null);
+    setEditItem(null);
   };
 
   const handleDelete = async (id) => {
@@ -190,8 +184,8 @@ export default function AddProductForm({ onProductAdded }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} required className="w-full border px-3 py-2 rounded" />
         <input name="price" type="number" placeholder="Selling Price" value={formData.price} onChange={handleChange} required className="w-full border px-3 py-2 rounded" />
-        <input name="mrp" type="number" placeholder="MRP" value={formData.mrp} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
-        <input name="purchaseRate" type="number" placeholder="Purchase Rate" value={formData.purchaseRate} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
+        <input name="mrp" type="number" placeholder="MRP (optional)" value={formData.mrp} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
+        <input name="purchaseRate" type="number" placeholder="Purchase Rate (optional)" value={formData.purchaseRate} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
 
         <select name="type" value={formData.type} onChange={handleChange} required className="w-full border px-3 py-2 rounded text-black">
           <option value="">Select Category</option>
@@ -217,7 +211,7 @@ export default function AddProductForm({ onProductAdded }) {
         </button>
 
         {editItem && (
-          <button type="button" onClick={() => { setEditItem(null); setFormData({ name: "", price: "", mrp: "", purchaseRate: "", type: "", pic: "", description: "" }); setImagePreview(null); }} className="w-full text-red-500 py-2 rounded hover:underline">
+          <button type="button" onClick={resetForm} className="w-full text-red-500 py-2 rounded hover:underline">
             Cancel Edit
           </button>
         )}
@@ -227,7 +221,7 @@ export default function AddProductForm({ onProductAdded }) {
 
       {addedItems.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2 text-center">🧾 Recently Added Products</h3>
+          <h3 className="text-lg font-semibold mb-2 text-center">🧾 Products</h3>
           {Object.entries(groupedByCategory()).map(([category, items]) => (
             <div key={category} className="mb-4">
               <h4 className="font-bold text-gray-700 mb-2">
@@ -236,15 +230,23 @@ export default function AddProductForm({ onProductAdded }) {
               <div className="grid grid-cols-3 gap-2">
                 {items.map((item) => (
                   <div key={item.id} className="border p-3 rounded shadow-sm text-center">
-                    <Image src={item.pic} alt={item.name} width={80} height={80} className="rounded mb-2 object-cover mx-auto" />
+                    <Image src={item.imageUrl || "/placeholder.jpg"} alt={item.name} width={80} height={80} className="rounded mb-2 object-cover mx-auto" />
                     <div className="text-black font-medium">{item.name}</div>
                     <div className="text-sm text-gray-500">₹{item.price}</div>
                     <div className="flex justify-center gap-3 mt-2 text-sm">
                       <button
                         onClick={() => {
                           setEditItem(item);
-                          setFormData({ name: item.name, price: item.price, mrp: item.mrp || "", purchaseRate: item.purchaseRate || "", type: item.type || "", pic: item.pic || "", description: item.description || "" });
-                          setImagePreview(item.pic);
+                          setFormData({
+                            name: item.name,
+                            price: item.price,
+                            mrp: item.mrp || "",
+                            purchaseRate: item.purchaseRate || "",
+                            type: item.type || "",
+                            imageUrl: item.imageUrl || "",
+                            description: item.description || "",
+                          });
+                          setImagePreview(item.imageUrl);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
                         className="text-blue-600 underline"

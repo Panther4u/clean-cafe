@@ -308,7 +308,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://sri-kandhan-cafe.onrender.com";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://clean-cafe.onrender.com";
 
 export default function ViewReceipts() {
   const router = useRouter();

@@ -123,6 +123,10 @@ require("dotenv").config();
 
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
+const multer = require("multer");
+const { getStorage } = require("firebase-admin/storage");
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 let serviceAccount;
 try {
@@ -624,15 +628,14 @@ app.post("/menu/add", async (req, res) => {
 });
 
 app.get("/menu/all", async (req, res) => {
+  console.log("🔥 MENU FETCH INITIATED");
   try {
-    const snapshot = await db.collection("menu").orderBy("id", "asc").get();
-    const menu = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    res.json(menu);
+    const snapshot = await db.collection("menu").get();
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log("✅ MENU RETURNING:", items.length);
+    res.json(items);
   } catch (err) {
-    console.error("❌ Failed to fetch menu items:", err);
+    console.error("❌ MENU FETCH FAILED:", err);
     res.status(500).json({ error: "Failed to fetch menu items" });
   }
 });
@@ -670,6 +673,29 @@ app.delete("/menu/delete/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete menu item" });
   }
 });
+
+app.post("/menu/upload", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
+
+    const bucket = getStorage().bucket();
+    const filename = `menu/${Date.now()}-${req.file.originalname}`;
+    const file = bucket.file(filename);
+
+    await file.save(req.file.buffer, {
+      contentType: req.file.mimetype,
+    });
+
+    await file.makePublic(); // Use signed URL if you need security
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+    res.status(200).json({ success: true, imageUrl: publicUrl });
+  } catch (err) {
+    console.error("❌ Image upload error:", err);
+    res.status(500).json({ success: false, error: "Upload failed" });
+  }
+});
+
 
 // Before all routes
 app.use((req, res, next) => {

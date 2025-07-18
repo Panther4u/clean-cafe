@@ -474,7 +474,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion as m } from "framer-motion";
 import Header from "../../components/header";
@@ -523,34 +523,41 @@ function Order() {
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  const fetchItems = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/menu/all`);
-      const data = await res.json();
-      console.log("✅ MENU:", data);
+const fetchedRef = useRef(false);
 
-      if (Array.isArray(data)) {
-        const initialized = data.map(item => ({
-          ...item,
-          amount: 0,
-          notes: "",
-        }));
-        setAllItems(initialized);
-        setItemsOrder(initialized);
-        setMenuLoaded(true); // ✅ Fix here
-      } else {
-        console.error("❌ Unexpected response:", data);
-      }
-    } catch (err) {
-      console.error("❌ Failed to fetch menu items:", err);
-    } finally {
-      setIsLoading(false);
+const fetchItems = async () => {
+  if (fetchedRef.current) return;
+  fetchedRef.current = true;
+  try {
+    const res = await fetch(`${API_BASE}/menu/all`);
+    const data = await res.json();
+
+    console.log("✅ MENU FETCHED FROM API:", data);
+
+    if (Array.isArray(data)) {
+      const initialized = data.map(item => ({
+        ...item,
+        amount: 0,
+        notes: "",
+      }));
+      setAllItems(initialized);
+      setItemsOrder(initialized);
+      setMenuLoaded(true);
+    } else {
+      console.error("❌ Response is not an array:", data);
     }
-  };
+  } catch (err) {
+    console.error("❌ Failed to fetch menu items:", err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  useEffect(() => {
-    fetchItems(); // ✅ Fetch menu on mount
-  }, []);
+
+useEffect(() => {
+  fetchItems();
+}, []);
+
 
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
@@ -682,24 +689,26 @@ function Order() {
                 {currentPage === 0 && (
                   <>
                     <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
-                    {!menuLoaded ? (
-                      <div className="flex h-screen items-center justify-center">
-                        <Spinner color="success" />
-                      </div>
-                    ) : (
-                      <m.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5">
-                        {filteredItems.map((data, idx) => (
-                          <MenuCards
-                            key={idx}
-                            onClickModal={showModal}
-                            data={data}
-                            onClickMinus={minusButtonHandler}
-                            onClickPlus={plusButtonHandler}
-                            searchText={searchText}
-                          />
-                        ))}
-                      </m.div>
-                    )}
+{!menuLoaded ? (
+  <div className="flex h-screen items-center justify-center">
+    <Spinner color="success" />
+  </div>
+) : (
+  <m.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5">
+    {filteredItems.map((data, idx) => (
+      <MenuCards
+        key={idx}
+        onClickModal={showModal}
+        data={data}
+        onClickMinus={minusButtonHandler}
+        onClickPlus={plusButtonHandler}
+        searchText={searchText}
+      />
+    ))}
+  </m.div>
+)}
+
+
                   </>
                 )}
 
