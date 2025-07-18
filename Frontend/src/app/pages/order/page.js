@@ -490,7 +490,7 @@ import { motion as m } from "framer-motion";
 import AddProductForm from "@/app/components/addproductform";
 import SalesSummary from "@/app/components/salessummary";
 import withAdminAuth from "@/app/lib/withAdminAuth";
-import DailyReport from "@/app/components/DailyReport";
+import DailyReport from "@/app/components/dailyreport";
 import DailyExpenseTracker from "@/app/components/DailyExpenseTracker";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
