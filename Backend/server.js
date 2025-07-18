@@ -626,13 +626,17 @@ app.post("/menu/add", async (req, res) => {
 app.get("/menu/all", async (req, res) => {
   try {
     const snapshot = await db.collection("menu").orderBy("id", "asc").get();
-    const menu = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const menu = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
     res.json(menu);
   } catch (err) {
     console.error("❌ Failed to fetch menu items:", err);
     res.status(500).json({ error: "Failed to fetch menu items" });
   }
 });
+
 
 
 // ✅ Update menu item

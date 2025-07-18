@@ -469,6 +469,9 @@
 //   );
 // }
 
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -520,47 +523,34 @@ function Order() {
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-const fetchItems = async () => {
-  try {
-    const cached = localStorage.getItem("menuCache");
-    const cacheExpiry = localStorage.getItem("menuCacheExpiry");
+  const fetchItems = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/menu/all`);
+      const data = await res.json();
+      console.log("✅ MENU:", data);
 
-    if (cached && cacheExpiry && Date.now() < parseInt(cacheExpiry)) {
-      const parsed = JSON.parse(cached);
-      const initialized = parsed.map(item => ({ ...item, amount: 0, notes: "" }));
-      setAllItems(initialized);
-      setItemsOrder(initialized);
+      if (Array.isArray(data)) {
+        const initialized = data.map(item => ({
+          ...item,
+          amount: 0,
+          notes: "",
+        }));
+        setAllItems(initialized);
+        setItemsOrder(initialized);
+        setMenuLoaded(true); // ✅ Fix here
+      } else {
+        console.error("❌ Unexpected response:", data);
+      }
+    } catch (err) {
+      console.error("❌ Failed to fetch menu items:", err);
+    } finally {
       setIsLoading(false);
-      return;
     }
+  };
 
-    const res = await fetch(`${API_BASE}/menu/all`);
-    const data = await res.json();
-
-    // ✅ Only keep essential fields
-    const minimalData = data.map(({ id, name, price, type, imageUrl }) => ({
-      id,
-      name,
-      price,
-      type,
-      imageUrl,
-    }));
-
-    localStorage.setItem("menuCache", JSON.stringify(minimalData));
-    localStorage.setItem("menuCacheExpiry", `${Date.now() + 30 * 60 * 1000}`);
-
-    const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
-    setAllItems(initialized);
-    setItemsOrder(initialized);
-  } catch (err) {
-    console.error("❌ Failed to fetch menu items:", err);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
-
+  useEffect(() => {
+    fetchItems(); // ✅ Fetch menu on mount
+  }, []);
 
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
