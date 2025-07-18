@@ -248,7 +248,7 @@ export default function Home() {
         )}
 
         {/* Admin Button */}
-       <div className="fixed bottom-0 w-full max-w-md md:max-w-4xl mx-auto right-0 left-0">
+       {/* <div className="fixed bottom-0 w-full max-w-md md:max-w-4xl mx-auto right-0 left-0">
   <div className="flex justify-end p-4">
     <button className="flex items-center px-3 py-1.5 font-bold space-x-2 bg-[#EAB968] hover:bg-[#e1ac57] rounded-tl-xl transition-all">
               onClick={() => setShowPasswordModal(true)}
@@ -256,7 +256,7 @@ export default function Home() {
               <h1>Admin</h1>
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

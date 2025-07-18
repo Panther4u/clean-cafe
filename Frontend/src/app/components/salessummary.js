@@ -22,43 +22,42 @@ export default function SalesSummary() {
   const [dailyError, setDailyError] = useState("");
 
   // Fetch all-time summary initially
-  useEffect(() => {
-    fetch(`${API_BASE}/sales-summary`)
-      .then(res => res.json())
-      .then(data => {
-        setSummary(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("❌ Failed to fetch sales summary:", err);
-        setLoading(false);
-      });
-  }, []);
+useEffect(() => {
+  fetch(`${API_BASE}/sales-summary`)
+    .then(res => res.json())
+    .then(data => {
+      console.log("📦 ALL summary response:", data); // ✅ log here
+      setSummary(data);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error("❌ Failed to fetch sales summary:", err);
+      setLoading(false);
+    });
+}, []);
 
-  // Fetch daily summary when date changes
-  const fetchDailySummary = async (date) => {
-    if (!date) return;
-    setDailySummary([]);
-    setDailyError("");
-    setDailyLoading(true);
+const fetchDailySummary = async (date) => {
+  if (!date) return;
+  setDailyLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/sales-summary-by-date?date=${date}`);
+    const data = await res.json();
+    console.log("📦 DAILY summary response:", data); // ✅ log here
 
-    try {
-      const res = await fetch(`${API_BASE}/sales-summary-by-date?date=${date}`);
-      const data = await res.json();
-
-      if (Array.isArray(data) && data.length > 0) {
-        setDailySummary(data);
-      } else {
-        setDailySummary([]);
-        setDailyError(`😔 No sales data found for ${date}.`);
-      }
-    } catch (error) {
-      console.error("❌ Failed to fetch daily summary:", error);
-      setDailyError("Something went wrong. Please try again.");
-    } finally {
-      setDailyLoading(false);
+    if (Array.isArray(data) && data.length > 0) {
+      setDailySummary(data);
+    } else {
+      setDailySummary([]);
+      setDailyError(`😔 No sales data found for ${date}.`);
     }
-  };
+  } catch (err) {
+    console.error("❌ Daily fetch error:", err);
+    setDailyError("Something went wrong.");
+  } finally {
+    setDailyLoading(false);
+  }
+};
+
 
   const totalSales = summary.reduce((sum, item) => sum + item.totalSales, 0);
   const totalCost = summary.reduce((sum, item) => sum + item.totalCost, 0);

@@ -471,7 +471,6 @@
 
 
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -480,7 +479,7 @@ import { motion as m } from "framer-motion";
 import Header from "../../components/header";
 import { TabMenu } from "@/app/components/tabmenu";
 import { MenuCards } from "@/app/components/menucards";
-import { Spinner } from "flowbite-react";
+import { Spinner, Button } from "flowbite-react";
 import { Footer } from "@/app/components/footer";
 import { ModalCard } from "@/app/components/modalcard";
 import { PaymentCard } from "@/app/components/paymentcard";
@@ -496,28 +495,14 @@ import DailyExpenseTracker from "@/app/components/DailyExpenseTracker";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 const menusType = [
-  "All",
-  "Tea",
-  "Coffee",
-  "Dairy Products",
-  "Snacks",
-  "Fresh Juice",
-  "Juice",
-  "Ice Cream",
-  "Karupatti Ice Cream",
-  "Karupatti Snacks",
-  "Others",
+  "All", "Tea", "Coffee", "Dairy Products", "Snacks",
+  "Fresh Juice", "Juice", "Ice Cream", "Karupatti Ice Cream",
+  "Karupatti Snacks", "Others"
 ];
 
 const $Page = [
-  "Order",
-  "Best Seller",
-  "Cart",
-  "Add Product",
-  "Sales Summary",
-  "Daily Report",
-  "Daily Expense Tracker",
-  "View Receipts",
+  "Order", "Best Seller", "Cart", "Add Product",
+  "Sales Summary", "Daily Report", "Daily Expense Tracker", "View Receipts"
 ];
 
 function Order() {
@@ -536,23 +521,52 @@ function Order() {
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
+  // ✅ Load menu items with caching
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await fetch(`${API_BASE}/menu/all`);
-        const data = await res.json();
-        const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
-        setAllItems(initialized);
-        setItemsOrder(initialized);
+        const cached = localStorage.getItem("menuCache");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const initialized = parsed.map(item => ({ ...item, amount: 0, notes: "" }));
+          setAllItems(initialized);
+          setItemsOrder(initialized);
+          setIsLoading(false);
+        } else {
+          const res = await fetch(`${API_BASE}/menu/all`);
+          const data = await res.json();
+          localStorage.setItem("menuCache", JSON.stringify(data));
+          const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+          setAllItems(initialized);
+          setItemsOrder(initialized);
+          setIsLoading(false);
+        }
       } catch (err) {
-        console.error("Failed to fetch items:", err);
-      } finally {
+        console.error("Failed to fetch menu items:", err);
         setIsLoading(false);
       }
     };
 
     fetchItems();
   }, []);
+
+  // ✅ Refresh menu (optional button)
+  const refreshMenu = async () => {
+    try {
+      localStorage.removeItem("menuCache");
+      setIsLoading(true);
+      const res = await fetch(`${API_BASE}/menu/all`);
+      const data = await res.json();
+      localStorage.setItem("menuCache", JSON.stringify(data));
+      const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+      setAllItems(initialized);
+      setItemsOrder(initialized);
+    } catch (error) {
+      console.error("Failed to refresh menu:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
@@ -574,12 +588,14 @@ function Order() {
     setMenuCards(e.target.id);
   };
 
-  const plusButtonHandler = (e, idButton = null) => {
-    e.preventDefault();
-    const id = idButton || e.target.id;
-    const updated = itemsOrder.map(item => {
+  const plusButtonHandler = (_e, id) => {
+    const updated = itemsOrder.map((item) => {
       if (item.id === id) {
-        setTotalPrice(t => ({ ...t, amount: t.amount + item.price, length: t.length + 1 }));
+        setTotalPrice((t) => ({
+          ...t,
+          amount: t.amount + item.price,
+          length: t.length + 1,
+        }));
         setDiscountAmount(0);
         return { ...item, amount: item.amount + 1 };
       }
@@ -588,12 +604,14 @@ function Order() {
     setItemsOrder(updated);
   };
 
-  const minusButtonHandler = (e, idButton = null) => {
-    e.preventDefault();
-    const id = idButton || e.target.id;
-    const updated = itemsOrder.map(item => {
+  const minusButtonHandler = (_e, id) => {
+    const updated = itemsOrder.map((item) => {
       if (item.id === id && item.amount > 0) {
-        setTotalPrice(t => ({ ...t, amount: t.amount - item.price, length: t.length - 1 }));
+        setTotalPrice((t) => ({
+          ...t,
+          amount: t.amount - item.price,
+          length: t.length - 1,
+        }));
         setDiscountAmount(0);
         return { ...item, amount: item.amount - 1 };
       }
@@ -662,14 +680,9 @@ function Order() {
     const extended = [...allItems, { ...newItem, amount: 0, notes: "" }];
     setAllItems(extended);
     setItemsOrder(extended);
+    // ✅ Optional: update cache immediately
+    localStorage.setItem("menuCache", JSON.stringify(extended));
   };
-
-  const AddProductPage = () => (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Add New Product</h1>
-      <AddProductForm onProductAdded={handleProductAdded} />
-    </div>
-  );
 
   const filteredItems = allItems.map(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase());
@@ -722,7 +735,7 @@ function Order() {
                       </div>
                     ) : (
                       <m.div
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
@@ -758,7 +771,13 @@ function Order() {
                   </div>
                 )}
 
-                {currentPage === 3 && <AddProductPage />}
+                {currentPage === 3 && (
+                  <div className="p-4 max-w-xl mx-auto">
+                    <h1 className="text-xl font-bold mb-4">Add New Product</h1>
+                    <AddProductForm onProductAdded={handleProductAdded} />
+                  </div>
+                )}
+
                 {currentPage === 4 && <SalesSummary />}
                 {currentPage === 5 && <DailyReport onBack={() => setCurrentPage(0)} allMenuItems={allItems} setCurrentPage={setCurrentPage} />}
                 {currentPage === 6 && <div className="p-4 max-w-4xl mx-auto mt-16"><DailyExpenseTracker selectedDate={new Date().toISOString().split("T")[0]} /></div>}
@@ -774,7 +793,6 @@ function Order() {
 }
 
 export default withAdminAuth(Order);
-
 
 
 

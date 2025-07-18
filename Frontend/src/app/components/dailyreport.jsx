@@ -140,8 +140,8 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
               )}
             </div>
 
-            {/* Expense Tracker */}
-            <DailyExpenseTracker selectedDate={selectedDate} />
+            {/* Expense Tracker
+            <DailyExpenseTracker selectedDate={selectedDate} /> */}
 
             {/* Product Sales Summary */}
             <div className="mt-10">
