@@ -462,22 +462,16 @@
 //   );
 // };
 
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { AiOutlineFileDone } from "react-icons/ai";
-import { TbPlayerTrackNextFilled } from "react-icons/tb";
-import { FaRegSmileBeam } from "react-icons/fa";
-import { motion as m } from "framer-motion";
 import { HiPrinter } from "react-icons/hi";
-import { useRouter } from "next/navigation";
+import { TbPlayerTrackNextFilled } from "react-icons/tb";
 import Image from "next/image";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
-  const router = useRouter();
   const [dateOrder, setDateOrder] = useState(null);
   const [numbers, setNumbers] = useState({ table: [], order: [] });
 
@@ -492,11 +486,11 @@ export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
     });
   }, []);
 
-  const billNo = `#001${numbers.order.join("")}`;
-  const tableNo = `#0${numbers.table.join("")}`;
-
   useEffect(() => {
     if (numbers.order.length > 0 && numbers.table.length > 0 && dateOrder) {
+      const billNo = `#001${numbers.order.join("")}`;
+      const tableNo = `#0${numbers.table.join("")}`;
+
       const payload = {
         order: checkout.order,
         total: totalPrice.amount,
@@ -509,20 +503,31 @@ export const Done = ({ checkout, discountAmount, totalPrice, onNewOrder }) => {
         createdAt: new Date().toISOString(),
       };
 
-      // 🔄 Save to backend (can be extended to save twice)
       fetch(`${API_BASE}/print`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
         .then((res) => res.json())
-        .then((data) => console.log("Receipt sent to printer:", data))
-        .catch((err) => console.error("Error saving/printing receipt:", err));
+        .then((data) => console.log("✅ Receipt sent:", data))
+        .catch((err) => console.error("❌ Print error:", err));
     }
-  }, [numbers, dateOrder]);
+  }, [
+    numbers.order,
+    numbers.table,
+    dateOrder,
+    checkout.order,
+    checkout.payment,
+    totalPrice.amount,
+    totalPrice.discounted,
+    discountAmount
+  ]);
 
-  if (!dateOrder || !billNo)
+  if (!dateOrder || numbers.order.length === 0 || numbers.table.length === 0)
     return <div className="text-center py-10">⏳ Preparing receipt...</div>;
+
+  const billNo = `#001${numbers.order.join("")}`;
+  const tableNo = `#0${numbers.table.join("")}`;
 
   const formattedDate = dateOrder.toLocaleDateString("en-IN");
   const formattedTime = dateOrder.toLocaleTimeString([], {

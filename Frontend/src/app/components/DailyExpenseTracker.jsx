@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
@@ -16,22 +17,25 @@ export default function DailyExpenseTracker({ selectedDate }) {
   const [editingId, setEditingId] = useState(null);
   const isEditing = Boolean(editingId);
 
-  const fetchExpenses = async () => {
-    if (!selectedDate) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/expenses-by-date?date=${selectedDate}`);
-      const data = await res.json();
-      setExpenses(data || []);
-    } catch (err) {
-      console.error("❌ Error fetching expenses:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ✅ FIXED: move the function inside useEffect
   useEffect(() => {
-    if (selectedDate) fetchExpenses();
+    const fetchExpenses = async () => {
+      if (!selectedDate) return;
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/expenses-by-date?date=${selectedDate}`);
+        const data = await res.json();
+        setExpenses(data || []);
+      } catch (err) {
+        console.error("❌ Error fetching expenses:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (selectedDate) {
+      fetchExpenses();
+    }
   }, [selectedDate]);
 
   const totalIn = expenses
@@ -51,6 +55,12 @@ export default function DailyExpenseTracker({ selectedDate }) {
     setType("out");
     setMethod("Cash");
     setEditingId(null);
+  };
+
+  const fetchExpensesAgain = async () => {
+    const res = await fetch(`${API_BASE}/expenses-by-date?date=${selectedDate}`);
+    const data = await res.json();
+    setExpenses(data || []);
   };
 
   const handleSubmit = async (e) => {
@@ -89,7 +99,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
       const result = await res.json();
       if (result.success) {
         resetForm();
-        await fetchExpenses();
+        await fetchExpensesAgain();
       } else {
         alert(result.message || "Error saving expense.");
       }
@@ -113,7 +123,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
 
     try {
       await fetch(`${API_BASE}/expenses/delete/${id}`, { method: "DELETE" });
-      await fetchExpenses();
+      await fetchExpensesAgain();
     } catch (err) {
       console.error("❌ Failed to delete:", err);
       alert("Delete failed.");
@@ -127,32 +137,33 @@ export default function DailyExpenseTracker({ selectedDate }) {
       {/* 🙋 Add/Edit Form */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-3">
         <select
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        className="col-span-2 w-full border px-3 py-2 rounded text-sm"
-        required
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="col-span-2 w-full border px-3 py-2 rounded text-sm"
+          required
         >
-        <option value="" disabled>-- Select Category --</option>
-        <optgroup label="👨‍🍳 Salary">
+          <option value="" disabled>-- Select Category --</option>
+          <optgroup label="👨‍🍳 Salary">
             <option value="Salary > Dhanush">Salary Dhanush</option>
             <option value="Salary > Manjula">Salary Manjula</option>
             <option value="Salary > Seenu">Salary Seenu</option>
             <option value="Salary > Vadaimaster">Salary Vadaimaster</option>
             <option value="Salary > Janaki">Salary Janaki</option>
-        </optgroup>
-        <optgroup label="🛒 Essentials">
+          </optgroup>
+          <optgroup label="🛒 Essentials">
             <option value="Milk">Milk</option>
             <option value="Grocery & Vegetables">Grocery & Vegetables</option>
-        </optgroup>
-        <optgroup label="🍴 Snacks">
+          </optgroup>
+          <optgroup label="🍴 Snacks">
             <option value="Samosa & Puffes">Samosa & Puffes</option>
             <option value="Sweet & Salt">Sweet & Salt</option>
-        </optgroup>
-        <optgroup label="❌ Waste & Misc">
+          </optgroup>
+          <optgroup label="❌ Waste & Misc">
             <option value="Wastage">Wastage</option>
             <option value="Other">Other</option>
-        </optgroup>
+          </optgroup>
         </select>
+
         <input
           type="number"
           placeholder="Amount"
@@ -186,19 +197,17 @@ export default function DailyExpenseTracker({ selectedDate }) {
           onChange={(e) => setNotes(e.target.value)}
           className="border px-3 py-2 rounded text-sm"
         />
+        <div className="flex justify-center col-span-1 sm:col-span-6">
+          <button
+            type="submit"
+            className={`${
+              isEditing ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"
+            } text-white px-6 py-2 rounded text-sm w-full sm:w-auto`}
+          >
+            {isEditing ? "Update" : "Add"}
+          </button>
+        </div>
       </form>
-
-      <div className="flex justify-center mb-5">
-  <button
-    type="submit"
-    form="daily-expense-form"  // optional if form has id
-    className={`${
-      isEditing ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-600 hover:bg-blue-700"
-    } text-white px-6 py-2 rounded text-sm`}
-  >
-    {isEditing ? "Update" : "Add"}
-  </button>
-</div>
 
       {/* 💰 In/Out Summary */}
       <div className="flex justify-between text-sm font-medium text-gray-700 mb-3">
@@ -212,7 +221,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
         </div>
       </div>
 
-      {/* 📋 Expenses List */}
+      {/* 📋 Expense List */}
       {loading ? (
         <p className="text-gray-500">Loading...</p>
       ) : expenses.length === 0 ? (
@@ -227,14 +236,18 @@ export default function DailyExpenseTracker({ selectedDate }) {
               }`}
             >
               <div>
-                <div className="font-semibold">{e.category} ({e.method})</div>
+                <div className="font-semibold">
+                  {e.category} ({e.method})
+                </div>
                 {e.notes && <div className="text-xs text-gray-600">{e.notes}</div>}
                 <div className="text-xs text-gray-500">
                   {new Date(e.createdAt).toLocaleTimeString()}
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-800">₹{Number(e.amount).toFixed(2)}</div>
+                <div className="font-bold text-gray-800">
+                  ₹{Number(e.amount).toFixed(2)}
+                </div>
                 <div className="flex gap-2 mt-1">
                   <button
                     onClick={() => handleEdit(e)}
@@ -256,4 +269,3 @@ export default function DailyExpenseTracker({ selectedDate }) {
       )}
     </div>
   );
-}

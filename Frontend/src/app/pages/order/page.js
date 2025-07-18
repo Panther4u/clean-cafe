@@ -471,10 +471,9 @@
 
 
 
-
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../../components/header";
 import { TabMenu } from "@/app/components/tabmenu";
@@ -493,80 +492,79 @@ import withAdminAuth from "@/app/lib/withAdminAuth";
 import DailyReport from "@/app/components/dailyreport";
 import DailyExpenseTracker from "@/app/components/DailyExpenseTracker";
 
+// ✅ Environment API
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+
+// ✅ Tabs and Page Labels
 const menusType = [
-  "All",
-  "Tea",
-  "Coffee",
-  "Dairy Products",
-  "Snacks",
-  "Fresh Juice",
-  "Juice",
-  "Ice Cream",
-  "Karupatti Ice Cream",
-  "Karupatti Snacks",
-  "Others",
+  "All", "Tea", "Coffee", "Dairy Products", "Snacks", "Fresh Juice", "Juice",
+  "Ice Cream", "Karupatti Ice Cream", "Karupatti Snacks", "Others",
 ];
+
 const $Page = [
-  "Order",
-  "Best Seller",
-  "Cart",
-  "Add Product",
-  "Sales Summary",
-  "Daily Report",
-  "Daily Expense Tracker", // ✅ Must match index
-  "View Receipts",
+  "Order", "Best Seller", "Cart", "Add Product",
+  "Sales Summary", "Daily Report", "Daily Expense Tracker", "View Receipts"
 ];
 
 function Order() {
   const router = useRouter();
+
   const [allItems, setAllItems] = useState([]);
   const [itemsOrder, setItemsOrder] = useState([]);
   const [totalPrice, setTotalPrice] = useState({ amount: 0, length: 0, discounted: 0 });
+
   const [currentPage, setCurrentPage] = useState(0);
   const [menuCards, setMenuCards] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
   const [detailModal, setDetailModal] = useState(null);
   const [openModal, setOpenModal] = useState(false);
+
   const [discountAmount, setDiscountAmount] = useState(0);
   const [checkout, setCheckout] = useState({ order: [], totalPrice: 0, finalPrice: 0, payment: "" });
+
   const [radioChekced, setRadioChecked] = useState("");
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-useEffect(() => {
-  const fetchItems = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/menu/all`);
-      const data = await res.json();
-      const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
-      setAllItems(initialized);
-      setItemsOrder(initialized);
-    } catch (err) {
-      console.error("Failed to fetch items:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // ✅ Load menu items on initial mount
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/menu/all`);
+        const data = await res.json();
+        const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+        setAllItems(initialized);
+        setItemsOrder(initialized);
+      } catch (err) {
+        console.error("❌ Failed to fetch items:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  fetchItems();
-}, []);
+    fetchItems();
+  }, []);
 
+  // ✅ Sync discounted price to `amount`
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
   }, [totalPrice.amount]);
 
+  // ✅ Apply discount % to total
   useEffect(() => {
     const discountedPrice = (totalPrice.amount * discountAmount) / 100;
     setTotalPrice(t => ({ ...t, discounted: t.amount - discountedPrice }));
-  }, [discountAmount]);
+  }, [discountAmount, totalPrice.amount]);
 
+  // ✅ If user is searching, go back to page 0
   useEffect(() => {
     if (searchText && currentPage !== 0) {
       setCurrentPage(0);
     }
-  }, [searchText]);
+  }, [searchText, currentPage]);
 
+  // ✅ Handlers
   const tabMenuHandler = (e) => {
     e.preventDefault();
     setMenuCards(e.target.id);
@@ -617,7 +615,7 @@ useEffect(() => {
     e.preventDefault();
     setOpenModal(true);
     const id = dataId || e.target.id;
-    const found = itemsOrder.find(item => item.id == id);
+    const found = itemsOrder.find(item => item.id === id);
     if (found) setDetailModal(found);
   };
 
@@ -636,7 +634,13 @@ useEffect(() => {
       window.scrollTo({ top: 1000, behavior: "smooth" });
       return;
     }
-    setCheckout({ order: orderItems, totalPrice: totalPrice.amount, finalPrice: totalPrice.discounted, payment: radioChekced });
+
+    setCheckout({
+      order: orderItems,
+      totalPrice: totalPrice.amount,
+      finalPrice: totalPrice.discounted,
+      payment: radioChekced,
+    });
     setDone(true);
   };
 
@@ -673,7 +677,6 @@ useEffect(() => {
     const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase());
     const matchesType = menuCards == 0 || item.type === parseInt(menuCards);
     const show = searchText.length > 0 ? matchesSearch : matchesType;
-
     if (!show) return null;
 
     const matchedOrder = itemsOrder.find(o => o.id === item.id);
@@ -684,14 +687,20 @@ useEffect(() => {
     };
   }).filter(Boolean);
 
+  // ✅ Final JSX
   return (
     <>
       <title>Coffee Ordering Mobile Web</title>
       {done ? (
-        <Done checkout={checkout} discountAmount={discountAmount} totalPrice={totalPrice} onNewOrder={resetOrderState} />
+        <Done
+          checkout={checkout}
+          discountAmount={discountAmount}
+          totalPrice={totalPrice}
+          onNewOrder={resetOrderState}
+        />
       ) : (
         <div className="z-30 flex w-full justify-center">
-          <m.div className="flex w-full max-w-md md:max-w-4xl mx-auto justify-center font-sans">
+          <m.div className="w-full max-w-md md:max-w-4xl mx-auto font-sans">
             <Header
               page={$Page[currentPage]}
               totalPrice={totalPrice.length}
@@ -709,50 +718,74 @@ useEffect(() => {
             )}
 
             <div className="w-screen min-h-screen mt-[52px] bg-white">
-              <div className="w-fullmax-w-md md:max-w-4xl mx-auto p-3 pb-[62px] space-y-3 overflow-auto md:overflow-visible">
-{currentPage === 0 && (
-  <>
-    <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
-    {isLoading ? (
-      <div className="flex h-screen items-center justify-center">
-        <Spinner color="success" />
-      </div>
-    ) : (
-      <m.div
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {filteredItems.map((data, idx) => (
-          <MenuCards
-            key={idx}
-            onClickModal={showModal}
-            data={data}
-            onClickMinus={minusButtonHandler}
-            onClickPlus={plusButtonHandler}
-            searchText={searchText}
-          />
-        ))}
-      </m.div>
-    )}
-  </>
-)}
+              <div className="w-full max-w-md md:max-w-4xl mx-auto p-3 pb-[62px] space-y-3 overflow-auto md:overflow-visible">
 
+                {currentPage === 0 && (
+                  <>
+                    <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
+                    {isLoading ? (
+                      <div className="flex h-screen items-center justify-center">
+                        <Spinner color="success" />
+                      </div>
+                    ) : (
+                      <m.div
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {filteredItems.map((data, idx) => (
+                          <MenuCards
+                            key={idx}
+                            onClickModal={showModal}
+                            data={data}
+                            onClickMinus={minusButtonHandler}
+                            onClickPlus={plusButtonHandler}
+                            searchText={searchText}
+                          />
+                        ))}
+                      </m.div>
+                    )}
+                  </>
+                )}
 
                 {currentPage === 1 && (
                   <div className="grid grid-cols-2 gap-3">
                     {itemsOrder.filter(item => item.favorite).map((data, idx) => (
-                      <MenuCards key={idx} onClickModal={showModal} data={data} onClickMinus={minusButtonHandler} onClickPlus={plusButtonHandler} />
+                      <MenuCards key={idx}
+                        onClickModal={showModal}
+                        data={data}
+                        onClickMinus={minusButtonHandler}
+                        onClickPlus={plusButtonHandler}
+                      />
                     ))}
                   </div>
                 )}
 
                 {currentPage === 2 && (
                   <div className="flex flex-col">
-                    <OrderCart itemsOrder={itemsOrder} minusButtonHandler={minusButtonHandler} plusButtonHandler={plusButtonHandler} setCurrentPage={setCurrentPage} deleteItemHandler={deleteItemHandler} showModal={showModal} />
-                    <VoucherPromo totalPrice={totalPrice} setTotalPrice={setTotalPrice} discountAmount={discountAmount} setDiscountAmount={setDiscountAmount} />
-                    <PaymentCard radioChekced={radioChekced} setRadioChecked={setRadioChecked} handleChange={handleChange} totalPrice={totalPrice} discountAmount={discountAmount} onClickToMenu={() => setCurrentPage(0)} />
+                    <OrderCart
+                      itemsOrder={itemsOrder}
+                      minusButtonHandler={minusButtonHandler}
+                      plusButtonHandler={plusButtonHandler}
+                      setCurrentPage={setCurrentPage}
+                      deleteItemHandler={deleteItemHandler}
+                      showModal={showModal}
+                    />
+                    <VoucherPromo
+                      totalPrice={totalPrice}
+                      setTotalPrice={setTotalPrice}
+                      discountAmount={discountAmount}
+                      setDiscountAmount={setDiscountAmount}
+                    />
+                    <PaymentCard
+                      radioChekced={radioChekced}
+                      setRadioChecked={setRadioChecked}
+                      handleChange={handleChange}
+                      totalPrice={totalPrice}
+                      discountAmount={discountAmount}
+                      onClickToMenu={() => setCurrentPage(0)}
+                    />
                   </div>
                 )}
 
@@ -765,15 +798,20 @@ useEffect(() => {
                     setCurrentPage={setCurrentPage}
                   />
                 )}
-
                 {currentPage === 6 && (
                   <div className="p-4 max-w-4xl mx-auto mt-16">
-<DailyExpenseTracker selectedDate={new Date().toISOString().split("T")[0]} />
+                    <DailyExpenseTracker selectedDate={new Date().toISOString().split("T")[0]} />
                   </div>
                 )}
               </div>
 
-              <ModalCard detailModal={detailModal} show={openModal} setDetailModal={setDetailModal} onClick={(e) => closeModal(e, detailModal?.id)} onClose={(e) => closeModal(e, detailModal?.id)} />
+              <ModalCard
+                detailModal={detailModal}
+                show={openModal}
+                setDetailModal={setDetailModal}
+                onClick={(e) => closeModal(e, detailModal?.id)}
+                onClose={(e) => closeModal(e, detailModal?.id)}
+              />
             </div>
           </m.div>
         </div>

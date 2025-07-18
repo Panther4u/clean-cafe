@@ -185,15 +185,14 @@
 //   );
 // };
 
-
-
 "use client";
+
 import React from "react";
 import Image from "next/image";
 import { HiOutlinePlus, HiOutlineMinus } from "react-icons/hi";
 import { FaEye } from "react-icons/fa6";
 
-export const MenuCards = React.memo(({ data, onClickPlus, onClickMinus, onClickModal }) => {
+const MenuCardsComponent = ({ data, onClickPlus, onClickMinus, onClickModal }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-3 m-2 flex flex-col">
       <div className="relative">
@@ -244,4 +243,7 @@ export const MenuCards = React.memo(({ data, onClickPlus, onClickMinus, onClickM
       </div>
     </div>
   );
-});
+};
+
+export const MenuCards = React.memo(MenuCardsComponent);
+MenuCards.displayName = "MenuCards";

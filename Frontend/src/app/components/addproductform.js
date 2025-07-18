@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 const TARGET_SIZE = 2767;
