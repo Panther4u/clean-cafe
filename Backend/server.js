@@ -340,6 +340,201 @@ app.get("/sales-summary", async (req, res) => {
   }
 });
 
+// ✅ Sales Summary by specific date
+app.get("/sales-summary-by-date", async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ error: "Missing date parameter" });
+    }
+
+    const receiptsSnapshot = await db
+      .collection("receipts")
+      .where("date", "==", date)
+      .get();
+
+    const receipts = receiptsSnapshot.docs.map((doc) => doc.data());
+
+    const menuSnapshot = await db.collection("menu").get();
+    const menuMap = {};
+    menuSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      menuMap[String(data.id)] = {
+        name: data.name,
+        price: data.price,
+        purchaseRate: data.purchaseRate || 0,
+      };
+    });
+
+    const summaryMap = {};
+
+    for (const receipt of receipts) {
+      for (const item of receipt.order || []) {
+        const key = item.id;
+        const menuItem = menuMap[key] || {};
+
+        const price = menuItem.price || item.price || 0;
+        const purchaseRate = menuItem.purchaseRate || 0;
+        const qty = item.amount || 0;
+
+        const totalSales = price * qty;
+        const totalCost = purchaseRate * qty;
+        const profit = totalSales - totalCost;
+
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            id: key,
+            name: item.name,
+            soldQty: 0,
+            price,
+            purchaseRate,
+            totalSales: 0,
+            totalCost: 0,
+            profit: 0,
+            lastSold: receipt.createdAt,
+          };
+        }
+
+        summaryMap[key].soldQty += qty;
+        summaryMap[key].totalSales += totalSales;
+        summaryMap[key].totalCost += totalCost;
+        summaryMap[key].profit += profit;
+        summaryMap[key].lastSold = receipt.createdAt;
+      }
+    }
+
+    const summaryList = Object.values(summaryMap);
+    res.json(summaryList);
+  } catch (err) {
+    console.error("❌ Failed to fetch sales summary by date:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/expenses-by-date", async (req, res) => {
+  const { date } = req.query;
+  try {
+    const snapshot = await db
+      .collection("expenses")
+      .where("date", "==", date)
+      .get();
+
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,            // ✅ add document ID here!
+      ...doc.data()
+    }));
+
+    res.json(data);
+  } catch (error) {
+    console.error("Error getting expenses:", error);
+    res.status(500).json({ error: "Failed to get expenses" });
+  }
+});
+
+// ✅ Add New Expense
+app.post("/expenses/add", async (req, res) => {
+  try {
+    const { category, amount, notes, date, type = "out", method = "Cash" } = req.body;
+
+    if (!category || !amount || !date) {
+      return res.status(400).json({ success: false, message: "Missing fields" });
+    }
+
+    await db.collection("expenses").add({
+      category,
+      amount: parseFloat(amount),
+      notes: notes || "",
+      type: type.toLowerCase(),     // ✅ Ensure it's lowercase
+      method,
+      date,
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Failed to save expense:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.put("/expenses/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, ...otherData } = req.body;
+
+    await db.collection("expenses").doc(id).update({
+      ...otherData,
+      type: type.toLowerCase(),   // ✅ force lowercase
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Update failed:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post("/expenses/add-or-update", async (req, res) => {
+  try {
+    const { category, amount, notes, type, method, date, createdAt } = req.body;
+
+    if (!category || !amount || !type || !method || !date) {
+      return res.status(400).json({ success: false, message: "Missing fields" });
+    }
+
+    const matchSnap = await db.collection("expenses")
+      .where("category", "==", category)
+      .where("type", "==", type)
+      .where("date", "==", date)
+      .limit(1)
+      .get();
+
+    const docData = {
+      category,
+      amount,
+      notes: notes || "",
+      type,
+      method,
+      date,
+      createdAt: createdAt || new Date().toISOString(),
+    };
+
+    if (!matchSnap.empty) {
+      // Update
+      const docId = matchSnap.docs[0].id;
+      await db.collection("expenses").doc(docId).update(docData);
+    } else {
+      // Add
+      await db.collection("expenses").add(docData);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("💥 Expense save error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+app.put("/expenses/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const newData = req.body;
+
+    await db.collection("expenses").doc(id).update(newData);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Update failed:", err);
+    res.status(500).json({ success: false });
+  }
+});
+app.delete("/expenses/delete/:id", async (req, res) => {
+  try {
+    await db.collection("expenses").doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Delete failed:", err);
+    res.status(500).json({ success: false });
+  }
+});
 
 // ✅ Get all receipts
 app.get("/receipts", async (req, res) => {

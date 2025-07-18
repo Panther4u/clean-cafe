@@ -490,6 +490,8 @@ import { motion as m } from "framer-motion";
 import AddProductForm from "@/app/components/addproductform";
 import SalesSummary from "@/app/components/salessummary";
 import withAdminAuth from "@/app/lib/withAdminAuth";
+import DailyReport from "@/app/components/DailyReport";
+import DailyExpenseTracker from "@/app/components/DailyExpenseTracker";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 const menusType = [
@@ -510,10 +512,10 @@ const $Page = [
   "Best Seller",
   "Cart",
   "Add Product",
-  "Sales",
-  "Daily Products",
-  "Manage Menu",      // ✅ optional
-  "View Receipts",    // ✅ optional
+  "Sales Summary",
+  "Daily Report",
+  "Daily Expense Tracker", // ✅ Must match index
+  "View Receipts",
 ];
 
 function Order() {
@@ -532,22 +534,23 @@ function Order() {
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/menu/all`);
-        const data = await res.json();
-        const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
-        setAllItems(initialized);
-        setItemsOrder(initialized);
-      } catch (err) {
-        console.error("Failed to fetch items:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
+useEffect(() => {
+  const fetchItems = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/menu/all`);
+      const data = await res.json();
+      const initialized = data.map(item => ({ ...item, amount: 0, notes: "" }));
+      setAllItems(initialized);
+      setItemsOrder(initialized);
+    } catch (err) {
+      console.error("Failed to fetch items:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchItems();
+}, []);
 
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
@@ -716,7 +719,7 @@ function Order() {
       </div>
     ) : (
       <m.div
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -755,6 +758,19 @@ function Order() {
 
                 {currentPage === 3 && <AddProductPage />}
                 {currentPage === 4 && <SalesSummary />}
+                {currentPage === 5 && (
+                  <DailyReport
+                    onBack={() => setCurrentPage(0)}
+                    allMenuItems={allItems}
+                    setCurrentPage={setCurrentPage}
+                  />
+                )}
+
+                {currentPage === 6 && (
+                  <div className="p-4 max-w-4xl mx-auto mt-16">
+<DailyExpenseTracker selectedDate={new Date().toISOString().split("T")[0]} />
+                  </div>
+                )}
               </div>
 
               <ModalCard detailModal={detailModal} show={openModal} setDetailModal={setDetailModal} onClick={(e) => closeModal(e, detailModal?.id)} onClose={(e) => closeModal(e, detailModal?.id)} />
