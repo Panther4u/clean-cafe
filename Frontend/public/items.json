@@ -7,7 +7,7 @@
       "menu"
     ],
     "recursive": false,
-    "creationTime": 1752937956337,
+    "creationTime": 1752938890553,
     "app": "firefoo"
   },
   "data": {
@@ -1493,20 +1493,6 @@
       "price": 25,
       "purchaseRate": "",
       "type": 9,
-      "__collections__": {}
-    },
-    "114": {
-      "name": "alva",
-      "price": 20,
-      "mrp": 20,
-      "purchaseRate": 20,
-      "type": 5,
-      "description": "",
-      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Snacks/Veg%20Puff.jpg?updatedAt=1752921272699",
-      "amount": 0,
-      "favorite": false,
-      "notes": "",
-      "id": 114,
       "__collections__": {}
     }
   }

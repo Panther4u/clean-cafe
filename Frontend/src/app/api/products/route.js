@@ -2,14 +2,15 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const ITEMS_FILE_PATH = path.join('/tmp', 'items.json');
+const ITEMS_FILE_PATH = path.join(process.cwd(), 'public', 'items.json');
 
 async function readItemsFile() {
   try {
     const data = await fs.readFile(ITEMS_FILE_PATH, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    console.warn('File not found, creating new one...');
+    console.error('Error reading items file:', error);
+    // Return default structure if file doesn't exist
     return {
       meta: {
         format: "JSON",
@@ -100,22 +101,26 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-
+    
     if (!id) {
       return NextResponse.json({ success: false, error: "No ID provided" }, { status: 400 });
     }
-
+    
     const items = await readItemsFile();
-
+    
     if (!items.data[id]) {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
     }
-
+    
+    // Delete the product
     delete items.data[id];
+    
+    // Update metadata
     items.meta.creationTime = Date.now();
-
+    
+    // Save the file
     const success = await writeItemsFile(items);
-
+    
     if (success) {
       return NextResponse.json({ success: true });
     } else {
