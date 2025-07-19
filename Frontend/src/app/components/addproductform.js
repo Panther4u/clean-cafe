@@ -26,11 +26,9 @@ export default function AddProductForm({ onProductAdded }) {
     purchaseRate: "",
     type: "",
     description: "",
-    image: null,
     imageUrl: "",
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
   const [addedItems, setAddedItems] = useState([]);
   const [editItem, setEditItem] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -54,15 +52,10 @@ export default function AddProductForm({ onProductAdded }) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: ["price", "mrp", "purchaseRate", "type"].includes(name) ? Number(value) : value,
+      [name]: ["price", "mrp", "purchaseRate", "type"].includes(name)
+        ? Number(value)
+        : value,
     }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setFormData((prev) => ({ ...prev, image: file }));
-    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -70,60 +63,22 @@ export default function AddProductForm({ onProductAdded }) {
     setLoading(true);
     setMessage("");
 
+    const product = {
+      ...formData,
+      amount: 0,
+      favorite: false,
+      notes: "",
+    };
+
     try {
       let res;
-
-      // EDIT MODE
       if (editItem) {
-        if (formData.image) {
-          const updateForm = new FormData();
-          updateForm.append("image", formData.image);
-          updateForm.append("data", JSON.stringify({
-            name: formData.name,
-            price: formData.price,
-            mrp: formData.mrp,
-            purchaseRate: formData.purchaseRate,
-            type: formData.type,
-            description: formData.description,
-          }));
-
-          res = await fetch(`${API_BASE}/menu/update-with-image/${editItem.id}`, {
-            method: "PUT",
-            body: updateForm,
-          });
-        } else {
-          res = await fetch(`${API_BASE}/menu/update/${editItem.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              price: formData.price,
-              mrp: formData.mrp,
-              purchaseRate: formData.purchaseRate,
-              type: formData.type,
-              description: formData.description,
-            }),
-          });
-        }
-      }
-      // ADD MODE
-      else {
-        // 1. Upload image
-        const imageForm = new FormData();
-        imageForm.append("image", formData.image);
-        const imgRes = await fetch(`${API_BASE}/menu/upload`, { method: "POST", body: imageForm });
-        const imgData = await imgRes.json();
-        if (!imgData.success) throw new Error("Image upload failed");
-
-        // 2. Create product
-        const product = {
-          ...formData,
-          imageUrl: imgData.imageUrl,
-          amount: 0,
-          favorite: false,
-          notes: "",
-        };
-
+        res = await fetch(`${API_BASE}/menu/update/${editItem.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(product),
+        });
+      } else {
         res = await fetch(`${API_BASE}/menu/add`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -131,14 +86,14 @@ export default function AddProductForm({ onProductAdded }) {
         });
       }
 
-      const result = await res.json();
+      const data = await res.json();
       if (res.ok) {
         setMessage(editItem ? "✅ Product updated!" : "✅ Product added!");
         fetchMenu();
-        if (onProductAdded) onProductAdded(result.item);
+        if (onProductAdded) onProductAdded(data.item);
         resetForm();
       } else {
-        setMessage("❌ Failed: " + (result?.error || "Unknown error"));
+        setMessage("❌ Failed: " + (data?.error || "Unknown error"));
       }
     } catch (err) {
       console.error("❌ Submit error:", err);
@@ -156,11 +111,9 @@ export default function AddProductForm({ onProductAdded }) {
       purchaseRate: "",
       type: "",
       description: "",
-      image: null,
       imageUrl: "",
     });
     setEditItem(null);
-    setImagePreview(null);
   };
 
   const handleDelete = async (id) => {
@@ -205,11 +158,26 @@ export default function AddProductForm({ onProductAdded }) {
           ))}
         </select>
 
-        <input type="file" accept="image/*" onChange={handleImageChange} className="w-full border px-3 py-2 rounded" />
-        {imagePreview && (
+        {/* ✅ Manually enter image URL */}
+        <input
+          type="text"
+          name="imageUrl"
+          placeholder="Enter Image URL"
+          value={formData.imageUrl}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded"
+        />
+
+        {formData.imageUrl && (
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-1">Image Preview:</p>
-            <Image src={imagePreview} width={120} height={120} alt="Preview" className="rounded object-contain border inline-block" />
+            <Image
+              src={formData.imageUrl}
+              width={120}
+              height={120}
+              alt="Preview"
+              className="rounded object-contain border inline-block"
+            />
           </div>
         )}
 
@@ -227,7 +195,6 @@ export default function AddProductForm({ onProductAdded }) {
       </form>
 
       <hr className="my-6" />
-
       {Object.entries(groupedByCategory()).map(([category, items]) => (
         <div key={category} className="mb-6">
           <h3 className="text-lg font-semibold text-black mb-2">{category} ({items.length})</h3>
@@ -240,12 +207,7 @@ export default function AddProductForm({ onProductAdded }) {
                 <div className="flex justify-center gap-3 mt-2 text-sm">
                   <button onClick={() => {
                     setEditItem(item);
-                    setFormData({
-                      ...item,
-                      image: null,
-                      imageUrl: item.imageUrl || "",
-                    });
-                    setImagePreview(item.imageUrl);
+                    setFormData({ ...item });
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }} className="text-blue-600 underline">✏️ Edit</button>
 

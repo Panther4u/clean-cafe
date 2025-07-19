@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@imagekit/next": "^2.1.2",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
@@ -19,6 +20,7 @@
     "escpos-usb": "^3.0.0-alpha.4",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
+    "imagekitio-react": "^4.3.0",
     "multer": "^2.0.2"
   },
   "devDependencies": {

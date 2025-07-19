@@ -116,6 +116,8 @@
 //   console.log(`🚀 Server running at http://localhost:${PORT}`);
 // });
 
+// ✅ server.js with ImageKit integration
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -124,7 +126,6 @@ require("dotenv").config();
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const multer = require("multer");
-const { getStorage } = require("firebase-admin/storage");
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -137,7 +138,6 @@ try {
 }
 initializeApp({
   credential: cert(serviceAccount),
-  storageBucket: "sri-kandhan-s-cafe.appspot.com", // ✅ Use your real bucket name here
 });
 
 const db = getFirestore();
@@ -155,20 +155,22 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("❌ Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("❌ Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
 app.post("/print", async (req, res) => {
   try {
@@ -713,6 +715,21 @@ app.delete("/menu/delete/:id", async (req, res) => {
     console.error("❌ Failed to delete menu item:", err);
     res.status(500).json({ error: "Failed to delete menu item" });
   }
+});
+
+
+// 🔐 ImageKit Auth endpoint
+app.get("/api/auth/imagekit", (req, res) => {
+  const ImageKit = require("imagekit");
+
+  const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+  });
+
+  const result = imagekit.getAuthenticationParameters();
+  res.json(result);
 });
 
 app.post("/menu/upload", upload.single("image"), async (req, res) => {
