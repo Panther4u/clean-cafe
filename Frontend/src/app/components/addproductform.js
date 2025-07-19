@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-
 const menusType = [
   { label: "☕ Tea", value: 1 },
   { label: "🥤 Coffee", value: 2 },
@@ -40,11 +38,15 @@ export default function AddProductForm({ onProductAdded }) {
 
   const fetchMenu = async () => {
     try {
-      const res = await fetch(`${API_BASE}/menu/all`);
-      const data = await res.json();
-      setAddedItems(Array.isArray(data) ? data : []);
+      const res = await fetch("/items.json");
+      const jsonData = await res.json();
+      
+      // Convert the data object into an array of items
+      const items = Object.values(jsonData.data || {});
+      setAddedItems(Array.isArray(items) ? items : []);
     } catch (err) {
-      console.error("❌ Failed to fetch menu:", err);
+      console.error("❌ Failed to fetch items:", err);
+      setAddedItems([]);
     }
   };
 
@@ -63,31 +65,31 @@ export default function AddProductForm({ onProductAdded }) {
     setLoading(true);
     setMessage("");
 
-    const product = {
-      ...formData,
-      amount: 0,
-      favorite: false,
-      notes: "",
-    };
-
     try {
-      let res;
+      // Prepare the product data
+      const product = {
+        ...formData,
+        amount: 0,
+        favorite: false,
+        notes: "",
+      };
+
       if (editItem) {
-        res = await fetch(`${API_BASE}/menu/update/${editItem.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(product),
-        });
-      } else {
-        res = await fetch(`${API_BASE}/menu/add`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(product),
-        });
+        product.id = editItem.id;
       }
 
-      const data = await res.json();
-      if (res.ok) {
+      // Send to API to handle saving to items.json
+      const response = await fetch('/api/products', {
+        method: editItem ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(product),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
         setMessage(editItem ? "✅ Product updated!" : "✅ Product added!");
         fetchMenu();
         if (onProductAdded) onProductAdded(data.item);
@@ -118,14 +120,22 @@ export default function AddProductForm({ onProductAdded }) {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
+    
     try {
-      const res = await fetch(`${API_BASE}/menu/delete/${id}`, { method: "DELETE" });
-      if (res.ok) {
+      const response = await fetch(`/api/products?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
         setAddedItems((prev) => prev.filter((item) => item.id !== id));
         setMessage("🗑️ Product deleted.");
+      } else {
+        const data = await response.json();
+        setMessage("❌ Failed: " + (data?.error || "Unknown error"));
       }
     } catch (err) {
       console.error("❌ Delete error:", err);
+      setMessage("❌ Failed to delete product.");
     }
   };
 
@@ -145,7 +155,7 @@ export default function AddProductForm({ onProductAdded }) {
         {editItem ? "✏️ Edit Product" : "➕ Add New Product"}
       </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 ">
         <input name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} required className="w-full border px-3 py-2 rounded" />
         <input name="price" type="number" placeholder="Selling Price" value={formData.price} onChange={handleChange} required className="w-full border px-3 py-2 rounded" />
         <input name="mrp" type="number" placeholder="MRP" value={formData.mrp} onChange={handleChange} className="w-full border px-3 py-2 rounded" />
@@ -158,7 +168,6 @@ export default function AddProductForm({ onProductAdded }) {
           ))}
         </select>
 
-        {/* ✅ Manually enter image URL */}
         <input
           type="text"
           name="imageUrl"
@@ -198,24 +207,42 @@ export default function AddProductForm({ onProductAdded }) {
       {Object.entries(groupedByCategory()).map(([category, items]) => (
         <div key={category} className="mb-6">
           <h3 className="text-lg font-semibold text-black mb-2">{category} ({items.length})</h3>
-          <div className="grid grid-cols-3 gap-3">
-            {items.map((item) => (
-              <div key={item.id} className="border p-3 rounded text-center shadow">
-                <Image src={item.imageUrl || "/placeholder.jpg"} width={80} height={80} alt={item.name} className="rounded object-cover mx-auto mb-2" />
-                <p className="font-medium text-black">{item.name}</p>
-                <p className="text-sm text-gray-500">₹{item.price}</p>
-                <div className="flex justify-center gap-3 mt-2 text-sm">
-                  <button onClick={() => {
-                    setEditItem(item);
-                    setFormData({ ...item });
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }} className="text-blue-600 underline">✏️ Edit</button>
 
-                  <button onClick={() => handleDelete(item.id)} className="text-red-600 underline">🗑️ Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
+
+<div className="grid grid-cols-3 gap-1">
+  {items.map((item) => (
+    <div key={item.id} className="border p-1 rounded text-center shadow">
+      <div className="w-[80px] h-[80px] mx-auto mb-2 relative overflow-hidden rounded">
+        <Image
+          src={item.imageUrl || "/placeholder.jpg"}
+          alt={item.name}
+          fill
+          className="object-cover rounded"
+        />
+      </div>
+      <p className="font-medium text-black text-xs">{item.name}</p>
+      <p className="text-sm text-gray-500 text-sm">₹{item.price}</p>
+      <div className="flex justify-center gap-3 mt-2 text-sm">
+        <button
+          onClick={() => {
+            setEditItem(item);
+            setFormData({ ...item });
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="text-blue-600 underline"
+        >
+          ✏️
+        </button>
+        <button
+          onClick={() => handleDelete(item.id)}
+          className="text-red-600 underline"
+        >
+          🗑️
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
         </div>
       ))}
     </div>

@@ -118,6 +118,9 @@
 
 // ✅ server.js with ImageKit integration
 
+
+
+
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -654,20 +657,27 @@ app.post("/menu/add", async (req, res) => {
   }
 });
 
-app.get("/menu/all", async (req, res) => {
-  console.log("🔥 MENU FETCH INITIATED");
-  try {
-    const snapshot = await db.collection("menu").get();
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log("✅ MENU RETURNING:", items.length);
-    res.json(items);
-  } catch (err) {
-    console.error("❌ MENU FETCH FAILED:", err);
-    res.status(500).json({ error: "Failed to fetch menu items" });
-  }
+// app.get("/menu/all", async (req, res) => {
+//   console.log("🔥 MENU FETCH INITIATED");
+//   try {
+//     const snapshot = await db.collection("menu").get();
+//     const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+//     console.log("✅ MENU RETURNING:", items.length);
+//     res.json(items);
+//   } catch (err) {
+//     console.error("❌ MENU FETCH FAILED:", err);
+//     res.status(500).json({ error: "Failed to fetch menu items" });
+//   }
+// });
+
+
+const localMenuPath = path.join(__dirname, "items.json");
+
+app.get("/menu/all", (req, res) => {
+  const file = fs.readFileSync(localMenuPath, "utf8");
+  const items = JSON.parse(file);
+  res.json(items);
 });
-
-
 
 // ✅ Update menu item
 app.put("/menu/update/:id", async (req, res) => {

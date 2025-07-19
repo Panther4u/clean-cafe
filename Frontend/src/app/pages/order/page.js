@@ -493,8 +493,6 @@ import withAdminAuth from "@/app/lib/withAdminAuth";
 import DailyReport from "@/app/components/dailyreport";
 import DailyExpenseTracker from "@/app/components/DailyExpenseTracker";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
-
 const menusType = [
   "All", "Tea", "Coffee", "Dairy Products", "Snacks",
   "Fresh Juice", "Juice", "Ice Cream", "Karupatti Ice Cream",
@@ -523,19 +521,22 @@ function Order() {
   const [done, setDone] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-const fetchedRef = useRef(false);
+  const fetchedRef = useRef(false);
 
 const fetchItems = async () => {
   if (fetchedRef.current) return;
   fetchedRef.current = true;
   try {
-    const res = await fetch(`${API_BASE}/menu/all`);
-    const data = await res.json();
+    const res = await fetch("/items.json");
+    const json = await res.json();
 
-    console.log("✅ MENU FETCHED FROM API:", data);
+    const itemsObject = json.data;
+    const items = Object.values(itemsObject); // Convert object to array
 
-    if (Array.isArray(data)) {
-      const initialized = data.map(item => ({
+    console.log("✅ MENU FETCHED FROM LOCAL FILE:", items);
+
+    if (Array.isArray(items)) {
+      const initialized = items.map(item => ({
         ...item,
         amount: 0,
         notes: "",
@@ -544,20 +545,19 @@ const fetchItems = async () => {
       setItemsOrder(initialized);
       setMenuLoaded(true);
     } else {
-      console.error("❌ Response is not an array:", data);
+      console.error("❌ Local file response is not an array:", items);
     }
   } catch (err) {
-    console.error("❌ Failed to fetch menu items:", err);
+    console.error("❌ Failed to load items.json:", err);
   } finally {
     setIsLoading(false);
   }
 };
 
 
-useEffect(() => {
-  fetchItems();
-}, []);
-
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   useEffect(() => {
     setTotalPrice(t => ({ ...t, discounted: t.amount }));
@@ -689,26 +689,24 @@ useEffect(() => {
                 {currentPage === 0 && (
                   <>
                     <TabMenu menusType={menusType} menuCards={menuCards} onClick={tabMenuHandler} />
-{!menuLoaded ? (
-  <div className="flex h-screen items-center justify-center">
-    <Spinner color="success" />
-  </div>
-) : (
-  <m.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5">
-    {filteredItems.map((data, idx) => (
-      <MenuCards
-        key={idx}
-        onClickModal={showModal}
-        data={data}
-        onClickMinus={minusButtonHandler}
-        onClickPlus={plusButtonHandler}
-        searchText={searchText}
-      />
-    ))}
-  </m.div>
-)}
-
-
+                    {!menuLoaded ? (
+                      <div className="flex h-screen items-center justify-center">
+                        <Spinner color="success" />
+                      </div>
+                    ) : (
+                      <m.div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5">
+                        {filteredItems.map((data, idx) => (
+                          <MenuCards
+                            key={idx}
+                            onClickModal={showModal}
+                            data={data}
+                            onClickMinus={minusButtonHandler}
+                            onClickPlus={plusButtonHandler}
+                            searchText={searchText}
+                          />
+                        ))}
+                      </m.div>
+                    )}
                   </>
                 )}
 

@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  HiOutlineMinus,
-  HiOutlinePlus,
-  HiTrash,
-} from "react-icons/hi";
+import { HiOutlineMinus, HiOutlinePlus, HiTrash } from "react-icons/hi";
 import { FaRegEdit } from "react-icons/fa";
 import Image from "next/image";
 
@@ -26,21 +22,21 @@ export const OrderCart = ({
               key={data.id}
               className="flex w-full justify-between px-2 py-3 bg-white text-black border-b space-x-3"
             >
-              <div className="flex flex-auto flex-col justify-between overflow-hidden">
+              <div className="flex flex-col justify-between flex-auto overflow-hidden">
                 <div className="flex font-semibold">
-                  <p>{data.name}</p>
+                  <p className="truncate">{data.name}</p>
                 </div>
-                <div className="flex text-green-600 font-semibold">
+                <div className="text-green-600 font-semibold">
                   ₹ {total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                 </div>
                 {data.notes && (
-                  <div className="flex text-sm">
+                  <div className="text-sm">
                     <p className="font-semibold font-sans">
                       Notes: <span className="font-normal">{data.notes}</span>
                     </p>
                   </div>
                 )}
-                <div className="flex w-[80px] mt-1 justify-between col-span-1 rounded-full bg-transparent text-white">
+                <div className="flex w-[80px] mt-1 justify-between rounded-full bg-transparent text-white">
                   <button
                     id={data.id}
                     onClick={(e) => {
@@ -64,41 +60,53 @@ export const OrderCart = ({
                   </button>
                 </div>
               </div>
-              <div className="flex flex-none justify-center items-center">
+
+              {/* Edit Button */}
+              <div className="flex items-start pt-1">
                 <button
                   id={data.id}
                   onClick={(e) => {
                     e.stopPropagation();
                     showModal(e, data.id);
                   }}
-                  className="flex p-2 -mr-1 justify-center items-center rounded-full transition text-green-600"
+                  className="p-2 justify-center items-center rounded-full text-green-600"
                 >
                   <FaRegEdit className="w-5 h-5" />
                 </button>
               </div>
-              <div className="flex flex-col justify-center items-center space-y-2">
-                <Image
-                  id={data.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    showModal(e, data.id);
-                  }}
-                  className="max-w-[80px] max-h-[80px] border hover:border-green-400 rounded-xl transition-all"
-                  src={data.pic}
-                  width={80}
-                  height={80}
-                  alt="product image"
-                  quality={100}
-                  unoptimized
-                />
+
+              {/* Product Image */}
+              <div className="flex justify-center items-center">
+                <div className="w-[80px] h-[80px] border hover:border-green-400 rounded-xl overflow-hidden">
+                  <Image
+                    id={data.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      showModal(e, data.id);
+                    }}
+                    className="object-cover w-full h-full transition-all"
+                    src={
+                      data.imageUrl
+                        ? `${data.imageUrl}?tr=w-2767,h-2767,c-at_max`
+                        : "/logo.png"
+                    }
+                    width={80}
+                    height={80}
+                    alt="product image"
+                    quality={100}
+                    unoptimized
+                  />
+                </div>
               </div>
-              <div className="flex flex-none justify-center items-center">
+
+              {/* Delete Button */}
+              <div className="flex items-start pt-1">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteItemHandler(e, data.id);
                   }}
-                  className="flex p-1 -mr-2 justify-center items-center rounded-xl transition text-white bg-red-600 hover:bg-red-500 active:bg-red-400"
+                  className="p-1 justify-center items-center rounded-xl text-white bg-red-600 hover:bg-red-500 active:bg-red-400"
                 >
                   <HiTrash />
                 </button>
