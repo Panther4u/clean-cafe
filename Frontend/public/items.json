@@ -7,7 +7,7 @@
       "menu"
     ],
     "recursive": false,
-    "creationTime": 1752931288984,
+    "creationTime": 1752937956337,
     "app": "firefoo"
   },
   "data": {
@@ -1356,7 +1356,7 @@
       "__collections__": {}
     },
     "101": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Sirudhaniyam%20laddu.jpg?updatedAt=1752921289032",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Sirudhaniyam%20laddu.jpg?updatedAt=1752921289032",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1370,7 +1370,7 @@
       "__collections__": {}
     },
     "102": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Kadalai%20Laddu.jpg?updatedAt=1752921281695",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Kadalai%20Laddu.jpg?updatedAt=1752921281695",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1384,7 +1384,7 @@
       "__collections__": {}
     },
     "105": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Kambu%20Laddu.jpg?updatedAt=1752921282408",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Kambu%20Laddu.jpg?updatedAt=1752921282408",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1398,7 +1398,7 @@
       "__collections__": {}
     },
     "107": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Paasipayaru%20Laddu.jpg?updatedAt=1752921287325",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Paasipayaru%20Laddu.jpg?updatedAt=1752921287325",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1412,7 +1412,7 @@
       "__collections__": {}
     },
     "108": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Karuppu%20Ulundhu%20Laddu.jpg?updatedAt=1752921284397",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Karuppu%20Ulundhu%20Laddu.jpg?updatedAt=1752921284397",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1426,7 +1426,7 @@
       "__collections__": {}
     },
     "109": {
-      "imageUrl":"",
+      "imageUrl": "",
       "amount": 0,
       "description": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Sweet%20Chilli%20Chips.jpg?updatedAt=1752921291190",
       "favorite": false,
@@ -1440,7 +1440,7 @@
       "__collections__": {}
     },
     "110": {
-      "imageUrl":"",
+      "imageUrl": "",
       "amount": 0,
       "description": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Potato%20Chips.jpg?updatedAt=1752921288499",
       "favorite": false,
@@ -1454,7 +1454,7 @@
       "__collections__": {}
     },
     "111": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Karupatti%20Mysurpa.jpg?updatedAt=1752921283413",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Karupatti%20Mysurpa.jpg?updatedAt=1752921283413",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1468,7 +1468,7 @@
       "__collections__": {}
     },
     "112": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nattu%20Sakkarai%20Mysurpa.jpg?updatedAt=1752921285072",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nattu%20Sakkarai%20Mysurpa.jpg?updatedAt=1752921285072",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1482,7 +1482,7 @@
       "__collections__": {}
     },
     "113": {
-      "imageUrl":"https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nellai%20Mysurpa%20.jpg?updatedAt=1752921287343",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nellai%20Mysurpa%20.jpg?updatedAt=1752921287343",
       "amount": 0,
       "description": "",
       "favorite": false,
@@ -1493,6 +1493,20 @@
       "price": 25,
       "purchaseRate": "",
       "type": 9,
+      "__collections__": {}
+    },
+    "114": {
+      "name": "alva",
+      "price": 20,
+      "mrp": 20,
+      "purchaseRate": 20,
+      "type": 5,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Snacks/Veg%20Puff.jpg?updatedAt=1752921272699",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 114,
       "__collections__": {}
     }
   }
