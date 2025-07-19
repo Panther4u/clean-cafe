@@ -124,14 +124,13 @@ export const MenuCards = ({
   id={data?.id}
   onClick={onClickModal}
   className="rounded-xl lg:rounded-b-none transition-all"
-  src={data?.imageUrl || "/logo.png"}  // ✅ use correct field name
+  src={`${data?.imageUrl}?tr=w-2767,h-2767,fo-auto,c-at_max` || "/logo.png"}
   width={200}
   height={200}
   alt={data?.name || "product image"}
   quality={100}
   unoptimized
 />
-
         <div
           onClick={onClickModal}
           className="hidden lg:flex opacity-0 group-hover:opacity-100 -mt-6 h-6 justify-center items-center text-white bg-black bg-opacity-60 rounded-t-xl transition-all duration-300"

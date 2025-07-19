@@ -171,6 +171,27 @@ app.use(
 
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+const fs = require("fs");
+const path = require("path");
+
+// 🔽 Export menu collection as JSON
+app.get("/menu/export", async (req, res) => {
+  try {
+    const snapshot = await db.collection("menu").get();
+    const items = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const json = JSON.stringify(items, null, 2);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", "attachment; filename=menu-export.json");
+    res.send(json);
+  } catch (err) {
+    console.error("❌ Failed to export menu:", err);
+    res.status(500).json({ error: "Failed to export menu" });
+  }
+});
 
 app.post("/print", async (req, res) => {
   try {
