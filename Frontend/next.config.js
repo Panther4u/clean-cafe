@@ -7,7 +7,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["firebasestorage.googleapis.com"],
+    domains: ['ik.imagekit.io'],
   },
   webpack(config) {
     config.experiments = {

@@ -120,17 +120,18 @@ export const MenuCards = ({
             <IoHeartCircleSharp className="float-right w-8 h-8 fill-red-600" />
           </div>
         )}
-        <Image
-          id={data?.id}
-          onClick={onClickModal}
-          className="rounded-xl lg:rounded-b-none transition-all"
-          src={data?.pic || "/logo.png"}  // ✅ prevent crash
-          width={200}
-          height={200}
-          alt={data?.name || "product image"}
-          quality={100}
-          unoptimized
-        />
+<Image
+  id={data?.id}
+  onClick={onClickModal}
+  className="rounded-xl lg:rounded-b-none transition-all"
+  src={data?.imageUrl || "/logo.png"}  // ✅ use correct field name
+  width={200}
+  height={200}
+  alt={data?.name || "product image"}
+  quality={100}
+  unoptimized
+/>
+
         <div
           onClick={onClickModal}
           className="hidden lg:flex opacity-0 group-hover:opacity-100 -mt-6 h-6 justify-center items-center text-white bg-black bg-opacity-60 rounded-t-xl transition-all duration-300"
