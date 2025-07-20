@@ -14,7 +14,10 @@ const menusType = [
   { label: "🍨 Karupatti Ice Cream", value: 8 },
   { label: "🍽️ Karupatti Snacks", value: 9 },
   { label: "🛒 Others", value: 10 },
+  { label: "🍪 Biscuits & Cakes", value: 11 },
+  { label: "📦 Parcel", value: 12 } // new entry
 ];
+
 
 export default function AddProductForm({ onProductAdded }) {
   const [formData, setFormData] = useState({

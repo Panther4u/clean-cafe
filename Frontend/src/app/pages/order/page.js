@@ -494,10 +494,21 @@ import DailyReport from "@/app/components/dailyreport";
 import DailyExpenseTracker from "@/app/components/DailyExpenseTracker";
 
 const menusType = [
-  "All", "Tea", "Coffee", "Dairy Products", "Snacks",
-  "Fresh Juice", "Juice", "Ice Cream", "Karupatti Ice Cream",
-  "Karupatti Snacks", "Others"
+  "All",
+  "Tea",
+  "Coffee",
+  "Dairy Products",
+  "Snacks",
+  "Fresh Juice",
+  "Juice",
+  "Ice Cream",
+  "Karupatti Ice Cream",
+  "Karupatti Snacks",
+  "Others",
+  "Biscuits & Cakes", // newly added
+  "Parcel",
 ];
+
 
 const $Page = [
   "Order", "Best Seller", "Cart", "Add Product",
