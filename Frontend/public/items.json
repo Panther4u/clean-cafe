@@ -7,7 +7,7 @@
       "menu"
     ],
     "recursive": false,
-    "creationTime": 1753029796657,
+    "creationTime": 1753099317604,
     "app": "firefoo"
   },
   "data": {
@@ -2809,6 +2809,20 @@
       "favorite": false,
       "notes": "",
       "id": 207,
+      "__collections__": {}
+    },
+    "208": {
+      "name": "Kara Paniyaram",
+      "price": 20,
+      "mrp": 20,
+      "purchaseRate": 10,
+      "type": 4,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Snacks/Kara%20paniyaram.jpg?updatedAt=1753099301053",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 208,
       "__collections__": {}
     }
   }
