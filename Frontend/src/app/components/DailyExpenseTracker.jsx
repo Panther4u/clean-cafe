@@ -136,33 +136,62 @@ export default function DailyExpenseTracker({ selectedDate }) {
 
       {/* 🙋 Add/Edit Form */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-3">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="col-span-2 w-full border px-3 py-2 rounded text-sm"
-          required
-        >
-          <option value="" disabled>-- Select Category --</option>
-          <optgroup label="👨‍🍳 Salary">
-            <option value="Salary > Dhanush">Salary Dhanush</option>
-            <option value="Salary > Manjula">Salary Manjula</option>
-            <option value="Salary > Seenu">Salary Seenu</option>
-            <option value="Salary > Vadaimaster">Salary Vadaimaster</option>
-            <option value="Salary > Janaki">Salary Janaki</option>
-          </optgroup>
-          <optgroup label="🛒 Essentials">
-            <option value="Milk">Milk</option>
-            <option value="Grocery & Vegetables">Grocery & Vegetables</option>
-          </optgroup>
-          <optgroup label="🍴 Snacks">
-            <option value="Samosa & Puffes">Samosa & Puffes</option>
-            <option value="Sweet & Salt">Sweet & Salt</option>
-          </optgroup>
-          <optgroup label="❌ Waste & Misc">
-            <option value="Wastage">Wastage</option>
-            <option value="Other">Other</option>
-          </optgroup>
-        </select>
+<select
+  value={category}
+  onChange={(e) => setCategory(e.target.value)}
+  className="col-span-2 w-full border px-3 py-2 rounded text-sm"
+  required
+>
+  <option value="" disabled>-- Select Category --</option>
+
+  <optgroup label="👨‍🍳 Salary">
+    <option value="Salary > Dhanush">Salary Dhanush</option>
+    <option value="Salary > Manjula">Salary Manjula</option>
+    <option value="Salary > Seenu">Salary Seenu</option>
+    <option value="Salary > Vadaimaster">Salary Vadaimaster</option>
+    <option value="Salary > Janaki">Salary Janaki</option>
+    <option value="Salary > Nandhu">Salary Nandhu</option>
+    <option value="Salary > Nivi">Salary Nivi</option>
+    <option value="Salary > Ajith">Salary Ajith</option>
+    <option value="Salary > Ramesh">Salary Ramesh</option>
+    <option value="Salary > Kavin">Salary Kavin</option>
+    <option value="Salary > Kavitha">Salary Kavitha</option>
+  </optgroup>
+
+  <optgroup label="🛒 Essentials">
+    <option value="Milk">Milk</option>
+    <option value="Curd">Curd</option>
+    <option value="Grocery & Vegetables">Grocery & Vegetables</option>
+    <option value="Essential Items">Essential Items</option>
+    <option value="Kaaraalan">Kaaraalan</option>
+    <option value="Sai Agency">Sai Agency</option>
+  </optgroup>
+
+  <optgroup label="🍴 Snacks">
+    <option value="Samosa">Samosa</option>
+    <option value="Puffs">Puffs</option>
+    <option value="Banana Cake">Banana Cake</option>
+    <option value="Banana Bun">Banana Bun</option>
+    <option value="Poli">Poli</option>
+    <option value="Brownie">Brownie</option>
+    <option value="Water">Water</option>
+    <option value="Sweet & Salt Biscuit">Sweet & Salt Biscuit</option>
+  </optgroup>
+
+  <optgroup label="🏪 Shop Expense">
+    <option value="Shop Expense > Rent">Rent</option>
+    <option value="Shop Expense > EB">EB</option>
+    <option value="Shop Expense > Gas">Gas</option>
+    <option value="Shop Expense > NKC Sweet & Savouries">NKC Sweet & Savouries</option>
+    <option value="Shop Expense > NKC Icecream">NKC Icecream</option>
+  </optgroup>
+
+  <optgroup label="❌ Waste & Misc">
+    <option value="Wastage">Wastage</option>
+    <option value="Other">Other</option>
+  </optgroup>
+</select>
+
 
         <input
           type="number"
