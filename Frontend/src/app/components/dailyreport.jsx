@@ -15,7 +15,6 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
   const [notFound, setNotFound] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  // ✅ FIX: Moved fetchReport inside the useEffect to avoid ESLint warning
   useEffect(() => {
     if (!selectedDate) return;
 
@@ -132,16 +131,13 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
                       key={idx}
                       className="border p-3 rounded bg-blue-50 text-sm shadow-sm"
                     >
-                      <div className="font-medium">{method}</div>
-                      <div>₹{amount.toFixed(2)}</div>
+                      <div className="font-medium text-black">{method}</div>
+                      <div className="text-black">₹{amount.toFixed(2)}</div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Expense Tracker
-            <DailyExpenseTracker selectedDate={selectedDate} /> */}
 
             {/* Product Sales Summary */}
             <div className="mt-10">
@@ -155,15 +151,11 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
                       key={idx}
                       className="border rounded p-4 bg-white shadow-sm text-sm"
                     >
-                      <h4 className="font-bold">{item.name}</h4>
-                      <p>Sold: {item.soldQty}</p>
-                      <p>Sales: ₹{item.totalSales.toFixed(2)}</p>
-                      <p>Cost: ₹{item.totalCost.toFixed(2)}</p>
-                      <p
-                        className={
-                          item.profit >= 0 ? "text-green-600" : "text-red-500"
-                        }
-                      >
+                      <h4 className="font-bold text-black">{item.name}</h4>
+                      <p className="text-black">Sold: {item.soldQty}</p>
+                      <p className="text-black">Sales: ₹{item.totalSales.toFixed(2)}</p>
+                      <p className="text-black">Cost: ₹{item.totalCost.toFixed(2)}</p>
+                      <p className="text-black">
                         Profit: ₹{item.profit.toFixed(2)}
                       </p>
                     </div>
