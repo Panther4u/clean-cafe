@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 
-export default function DailyExpenseTracker({ selectedDate }) {
+export default function DailyExpenseTracker({ selectedDate: initialDate }) {
+  const [selectedDate, setSelectedDate] = useState(
+    initialDate || new Date().toISOString().split("T")[0]
+  );
+
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +21,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
   const [editingId, setEditingId] = useState(null);
   const isEditing = Boolean(editingId);
 
-  // ✅ FIXED: move the function inside useEffect
+  // ✅ Fetch expenses whenever selectedDate changes
   useEffect(() => {
     const fetchExpenses = async () => {
       if (!selectedDate) return;
@@ -33,9 +37,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
       }
     };
 
-    if (selectedDate) {
-      fetchExpenses();
-    }
+    fetchExpenses();
   }, [selectedDate]);
 
   const totalIn = expenses
@@ -76,7 +78,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
       notes,
       type: type.toLowerCase(),
       method,
-      date: selectedDate || new Date().toISOString().split("T")[0],
+      date: selectedDate,
       createdAt: new Date().toISOString(),
     };
 
@@ -132,10 +134,11 @@ export default function DailyExpenseTracker({ selectedDate }) {
 
   return (
     <div className="bg-white border rounded-lg p-4 mt-6 shadow-sm max-w-4xl mx-auto">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">📘 Daily Expense Tracker</h2>
-
+      
       {/* 🙋 Add/Edit Form */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-3">
+              {/* 📅 Date Picker */}
+
 <select
   value={category}
   onChange={(e) => setCategory(e.target.value)}
@@ -191,7 +194,12 @@ export default function DailyExpenseTracker({ selectedDate }) {
     <option value="Other">Other</option>
   </optgroup>
 </select>
-
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="border px-1 py-1 rounded "
+        />
 
         <input
           type="number"
