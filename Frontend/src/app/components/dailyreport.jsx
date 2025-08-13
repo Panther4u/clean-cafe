@@ -86,7 +86,7 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border px-3 py-1 rounded-md border-gray-300 shadow-sm"
+            className="border px-3 py-1 rounded-md border-gray-300 shadow-sm  text-black"
           />
         </div>
 
