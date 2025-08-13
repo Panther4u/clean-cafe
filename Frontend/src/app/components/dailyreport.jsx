@@ -81,7 +81,7 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
       <div className="p-4 pt-20">
         {/* ==== Date Picker ==== */}
         <div className="text-center mb-6">
-          <label className="mr-2 font-semibold">🗓️ Select Date:</label>
+          <label className="mr-2 font-semibold  text-black">🗓️ Select Date:</label>
           <input
             type="date"
             value={selectedDate}
