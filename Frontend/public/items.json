@@ -2908,6 +2908,34 @@
       "notes": "",
       "id": 214,
       "__collections__": {}
+    },
+    "215": {
+      "name": "Peanut Chikki 1pcs",
+      "price": 5,
+      "mrp": 5,
+      "purchaseRate": 3.57,
+      "type": 9,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Peanut%20Chikki.jpg?updatedAt=1755159067859",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 215,
+      "__collections__": {}
+    },
+    "216": {
+      "name": "Nice Peanut Chikki 1pcs",
+      "price": 5,
+      "mrp": 5,
+      "purchaseRate": 3.57,
+      "type": 9,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nice%20Peanut%20Chikki.jpg?updatedAt=1755159078396",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 216,
+      "__collections__": {}
     }
   }
 }
