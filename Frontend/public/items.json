@@ -2936,6 +2936,76 @@
       "notes": "",
       "id": 216,
       "__collections__": {}
+    },
+    "217": {
+      "name": "Nattu Sakkarai Laddu 200g",
+      "price": 129,
+      "mrp": 129,
+      "purchaseRate": 73.50,
+      "type": 9,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nattu%20Sakkarai%20Laddu.jpg?updatedAt=1755161137422",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 217,
+      "__collections__": {}
+    },
+    "218": {
+      "name": "Nattu Sakkarai Laddu 1pcs",
+      "price": 22,
+      "mrp": 22,
+      "purchaseRate": 12.25,
+      "type": 9,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Nattu%20Sakkarai%20Laddu.jpg?updatedAt=1755161137422",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 218,
+      "__collections__": {}
+    },
+    "219": {
+      "name": "Badusha 200g",
+      "price": 76,
+      "mrp": 76,
+      "purchaseRate": 50.54,
+      "type": 9,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Badusha.jpg?updatedAt=1755161150831",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 219,
+      "__collections__": {}
+    },
+    "220": {
+      "name": "Badusha 1pcs",
+      "price": 13,
+      "mrp": 13,
+      "purchaseRate": 8.42,
+      "type": 9,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Badusha.jpg?updatedAt=1755161150831",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 220,
+      "__collections__": {}
+    },
+    "221": {
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Karupatti%20Mysurpa.jpg?updatedAt=1752921283413",
+      "amount": 0,
+      "description": "",
+      "favorite": false,
+      "id": 221,
+      "mrp": 27,
+      "name": "Karupatti Mysurpa 200g",
+      "notes": "",
+      "price": 27,
+      "purchaseRate": 18.81,
+      "type": 9,
+      "__collections__": {}
     }
   }
 }
