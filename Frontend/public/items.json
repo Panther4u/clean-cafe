@@ -759,10 +759,10 @@
       "description": "",
       "favorite": false,
       "id": 54,
-      "mrp": 10,
+      "mrp": 15,
       "name": "Sprite 200ml",
       "notes": "",
-      "price": 10,
+      "price": 15,
       "purchaseRate": 6.5,
       "type": 6,
       "__collections__": {}
@@ -773,10 +773,10 @@
       "description": "",
       "favorite": false,
       "id": 55,
-      "mrp": 10,
+      "mrp": 15,
       "name": "Coca-Cola 200ml",
       "notes": "",
-      "price": 10,
+      "price": 15,
       "purchaseRate": 6.5,
       "type": 6,
       "__collections__": {}
@@ -787,10 +787,10 @@
       "description": "",
       "favorite": false,
       "id": 56,
-      "mrp": 10,
+      "mrp": 15,
       "name": "Limca 200ml",
       "notes": "",
-      "price": 10,
+      "price": 15,
       "purchaseRate": 6.5,
       "type": 6,
       "__collections__": {}
@@ -801,10 +801,10 @@
       "description": "",
       "favorite": false,
       "id": 57,
-      "mrp": 10,
+      "mrp": 15,
       "name": "Fanta 200ml",
       "notes": "",
-      "price": 10,
+      "price": 15,
       "purchaseRate": 6.5,
       "type": 6,
       "__collections__": {}
@@ -3383,6 +3383,20 @@
       "favorite": false,
       "notes": "", 
       "id": 248,
+      "__collections__": {}
+    },
+    "249": {
+      "name": "Thumps Up 200ml",
+      "price": 15,
+      "mrp": 15,
+      "purchaseRate": 0,
+      "type": 6,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Juice/Thumps%20Up%20200ml.jpg?updatedAt=1755169404260",
+      "amount": 0,
+      "favorite": false,
+      "notes": "", 
+      "id": 249,
       "__collections__": {}
     }
   }
