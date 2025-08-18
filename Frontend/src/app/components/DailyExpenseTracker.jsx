@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 
-export default function DailyExpenseTracker({ selectedDate }) {
+export default function DailyExpenseTracker({ selectedDate: initialDate }) {
+  const [selectedDate, setSelectedDate] = useState(
+    initialDate || new Date().toISOString().split("T")[0]
+  );
+
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +21,6 @@ export default function DailyExpenseTracker({ selectedDate }) {
   const [editingId, setEditingId] = useState(null);
   const isEditing = Boolean(editingId);
 
-  // ✅ FIXED: move the function inside useEffect
   useEffect(() => {
     const fetchExpenses = async () => {
       if (!selectedDate) return;
@@ -33,9 +36,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
       }
     };
 
-    if (selectedDate) {
-      fetchExpenses();
-    }
+    fetchExpenses();
   }, [selectedDate]);
 
   const totalIn = expenses
@@ -65,10 +66,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!category || !amount) {
-      return alert("Please provide both Category and Amount.");
-    }
+    if (!category || !amount) return alert("Please provide both Category and Amount.");
 
     const payload = {
       category,
@@ -76,7 +74,7 @@ export default function DailyExpenseTracker({ selectedDate }) {
       notes,
       type: type.toLowerCase(),
       method,
-      date: selectedDate || new Date().toISOString().split("T")[0],
+      date: selectedDate,
       createdAt: new Date().toISOString(),
     };
 
@@ -131,101 +129,104 @@ export default function DailyExpenseTracker({ selectedDate }) {
   };
 
   return (
-    <div className="bg-white border rounded-lg p-4 mt-6 shadow-sm max-w-4xl mx-auto">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">📘 Daily Expense Tracker</h2>
+    <div className="bg-white border rounded-lg p-4 mt-6 shadow-sm max-w-4xl mx-auto text-black">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-3 text-black">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="col-span-2 w-full border px-3 py-2 rounded text-sm text-black"
+          required
+        >
+          <option value="" disabled>-- Select Category --</option>
+          <optgroup label="👨‍🍳 Salary">
+            <option value="Salary > Dhanush">Salary Dhanush</option>
+            <option value="Salary > Manjula">Salary Manjula</option>
+            <option value="Salary > Seenu">Salary Seenu</option>
+            <option value="Salary > Vadaimaster">Salary Vadaimaster</option>
+            <option value="Salary > Janaki">Salary Janaki</option>
+            <option value="Salary > Nandhu">Salary Nandhu</option>
+            <option value="Salary > Nivi">Salary Nivi</option>
+            <option value="Salary > Ajith">Salary Ajith</option>
+            <option value="Salary > Ramesh">Salary Ramesh</option>
+            <option value="Salary > Kavin">Salary Kavin</option>
+            <option value="Salary > Kavitha">Salary Kavitha</option>
+          </optgroup>
+          <optgroup label="🛒 Essentials">
+            <option value="Milk">Milk</option>
+            <option value="Curd">Curd</option>
+            <option value="Grocery & Vegetables">Grocery & Vegetables</option>
+            <option value="Essential Items">Essential Items</option>
+            <option value="Kaaraalan">Kaaraalan</option>
+            <option value="Sai Agency">Sai Agency</option>
+          </optgroup>
+          <optgroup label="🍴 Snacks">
+            <option value="Samosa">Samosa</option>
+            <option value="Puffs">Puffs</option>
+            <option value="Banana Cake">Banana Cake</option>
+            <option value="Banana Bun">Banana Bun</option>
+            <option value="Poli">Poli</option>
+            <option value="Brownie">Brownie</option>
+            <option value="Water">Water</option>
+            <option value="Sweet & Salt Biscuit">Sweet & Salt Biscuit</option>
+          </optgroup>
+          <optgroup label="🏪 Shop Expense">
+            <option value="Shop Expense > Rent">Rent</option>
+            <option value="Shop Expense > EB">EB</option>
+            <option value="Shop Expense > Gas">Gas</option>
+            <option value="Shop Expense > NKC Sweet & Savouries">NKC Sweet & Savouries</option>
+            <option value="Shop Expense > NKC Icecream">NKC Icecream</option>
+          </optgroup>
+          <optgroup label="❌ Waste & Misc">
+            <option value="Wastage">Wastage</option>
+            <option value="Other">Other</option>
+          </optgroup>
+        </select>
 
-      {/* 🙋 Add/Edit Form */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-3">
-<select
-  value={category}
-  onChange={(e) => setCategory(e.target.value)}
-  className="col-span-2 w-full border px-3 py-2 rounded text-sm"
-  required
->
-  <option value="" disabled>-- Select Category --</option>
-
-  <optgroup label="👨‍🍳 Salary">
-    <option value="Salary > Dhanush">Salary Dhanush</option>
-    <option value="Salary > Manjula">Salary Manjula</option>
-    <option value="Salary > Seenu">Salary Seenu</option>
-    <option value="Salary > Vadaimaster">Salary Vadaimaster</option>
-    <option value="Salary > Janaki">Salary Janaki</option>
-    <option value="Salary > Nandhu">Salary Nandhu</option>
-    <option value="Salary > Nivi">Salary Nivi</option>
-    <option value="Salary > Ajith">Salary Ajith</option>
-    <option value="Salary > Ramesh">Salary Ramesh</option>
-    <option value="Salary > Kavin">Salary Kavin</option>
-    <option value="Salary > Kavitha">Salary Kavitha</option>
-  </optgroup>
-
-  <optgroup label="🛒 Essentials">
-    <option value="Milk">Milk</option>
-    <option value="Curd">Curd</option>
-    <option value="Grocery & Vegetables">Grocery & Vegetables</option>
-    <option value="Essential Items">Essential Items</option>
-    <option value="Kaaraalan">Kaaraalan</option>
-    <option value="Sai Agency">Sai Agency</option>
-  </optgroup>
-
-  <optgroup label="🍴 Snacks">
-    <option value="Samosa">Samosa</option>
-    <option value="Puffs">Puffs</option>
-    <option value="Banana Cake">Banana Cake</option>
-    <option value="Banana Bun">Banana Bun</option>
-    <option value="Poli">Poli</option>
-    <option value="Brownie">Brownie</option>
-    <option value="Water">Water</option>
-    <option value="Sweet & Salt Biscuit">Sweet & Salt Biscuit</option>
-  </optgroup>
-
-  <optgroup label="🏪 Shop Expense">
-    <option value="Shop Expense > Rent">Rent</option>
-    <option value="Shop Expense > EB">EB</option>
-    <option value="Shop Expense > Gas">Gas</option>
-    <option value="Shop Expense > NKC Sweet & Savouries">NKC Sweet & Savouries</option>
-    <option value="Shop Expense > NKC Icecream">NKC Icecream</option>
-  </optgroup>
-
-  <optgroup label="❌ Waste & Misc">
-    <option value="Wastage">Wastage</option>
-    <option value="Other">Other</option>
-  </optgroup>
-</select>
-
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="border px-1 py-1 rounded text-black"
+        />
 
         <input
           type="number"
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="border px-3 py-2 rounded text-sm"
+          className="border px-3 py-2 rounded text-sm text-black"
           required
         />
+
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="border px-3 py-2 rounded text-sm"
+          className="border px-3 py-2 rounded text-sm text-black"
         >
           <option value="out">⬇ Out</option>
           <option value="in">⬆ In</option>
         </select>
+
         <select
           value={method}
           onChange={(e) => setMethod(e.target.value)}
-          className="border px-3 py-2 rounded text-sm"
+          className="border px-3 py-2 rounded text-sm text-black"
         >
           <option>Cash</option>
           <option>UPI</option>
           <option>Card</option>
           <option>Bank</option>
         </select>
+
         <input
           type="text"
           placeholder="Notes (optional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="border px-3 py-2 rounded text-sm"
+          className="border px-3 py-2 rounded text-sm text-black"
         />
+
         <div className="flex justify-center col-span-1 sm:col-span-6">
           <button
             type="submit"
@@ -238,23 +239,20 @@ export default function DailyExpenseTracker({ selectedDate }) {
         </div>
       </form>
 
-      {/* 💰 In/Out Summary */}
-      <div className="flex justify-between text-sm font-medium text-gray-700 mb-3">
-        <div>In: <span className="text-green-600">₹{totalIn.toFixed(2)}</span></div>
-        <div>Out: <span className="text-red-600">₹{totalOut.toFixed(2)}</span></div>
-        <div>
-          Balance:{" "}
-          <span className={balance >= 0 ? "text-green-600" : "text-red-600"}>
-            ₹{balance.toFixed(2)}
-          </span>
-        </div>
+      {/* Summary */}
+      <div className="flex justify-between text-sm font-medium text-black mb-3">
+        <div>In: ₹{totalIn.toFixed(2)}</div>
+        <div>Out: ₹{totalOut.toFixed(2)}</div>
+        <div>Balance: ₹{balance.toFixed(2)}</div>
       </div>
 
-      {/* 📋 Expense List */}
+      {/* Expense List */}
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-black">Loading...</p>
       ) : expenses.length === 0 ? (
-        <p className="text-sm text-gray-400">No expenses for {selectedDate}.</p>
+        <p className="text-sm text-black">
+          No expenses for {new Date(selectedDate).toLocaleDateString("en-GB")}
+        </p>
       ) : (
         <ul className="space-y-3">
           {expenses.map((e) => (
@@ -262,31 +260,30 @@ export default function DailyExpenseTracker({ selectedDate }) {
               key={e.id}
               className={`p-3 rounded border shadow-sm text-sm flex justify-between items-start ${
                 e.type === "in" ? "bg-green-50" : "bg-red-50"
-              }`}
+              } text-black`}
             >
               <div>
                 <div className="font-semibold">
                   {e.category} ({e.method})
                 </div>
-                {e.notes && <div className="text-xs text-gray-600">{e.notes}</div>}
-                <div className="text-xs text-gray-500">
-                  {new Date(e.createdAt).toLocaleTimeString()}
+                {e.notes && <div className="text-xs">{e.notes}</div>}
+                <div className="text-xs">
+                  {new Date(e.createdAt).toLocaleDateString("en-GB")}{" "}
+                  {new Date(e.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-800">
-                  ₹{Number(e.amount).toFixed(2)}
-                </div>
+                <div className="font-bold">₹{Number(e.amount).toFixed(2)}</div>
                 <div className="flex gap-2 mt-1">
                   <button
                     onClick={() => handleEdit(e)}
-                    className="text-blue-600 hover:underline text-xs"
+                    className="hover:underline text-xs text-black"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(e.id)}
-                    className="text-red-600 hover:underline text-xs"
+                    className="hover:underline text-xs text-black"
                   >
                     Delete
                   </button>

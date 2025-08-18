@@ -15,7 +15,6 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
   const [notFound, setNotFound] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  // ✅ FIX: Moved fetchReport inside the useEffect to avoid ESLint warning
   useEffect(() => {
     if (!selectedDate) return;
 
@@ -82,12 +81,12 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
       <div className="p-4 pt-20">
         {/* ==== Date Picker ==== */}
         <div className="text-center mb-6">
-          <label className="mr-2 font-semibold">🗓️ Select Date:</label>
+          <label className="mr-2 font-semibold  text-black">🗓️ Select Date:</label>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border px-3 py-1 rounded-md border-gray-300 shadow-sm"
+            className="border px-3 py-1 rounded-md border-gray-300 shadow-sm  text-black"
           />
         </div>
 
@@ -132,16 +131,13 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
                       key={idx}
                       className="border p-3 rounded bg-blue-50 text-sm shadow-sm"
                     >
-                      <div className="font-medium">{method}</div>
-                      <div>₹{amount.toFixed(2)}</div>
+                      <div className="font-medium text-black">{method}</div>
+                      <div className="text-black">₹{amount.toFixed(2)}</div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Expense Tracker
-            <DailyExpenseTracker selectedDate={selectedDate} /> */}
 
             {/* Product Sales Summary */}
             <div className="mt-10">
@@ -155,15 +151,11 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
                       key={idx}
                       className="border rounded p-4 bg-white shadow-sm text-sm"
                     >
-                      <h4 className="font-bold">{item.name}</h4>
-                      <p>Sold: {item.soldQty}</p>
-                      <p>Sales: ₹{item.totalSales.toFixed(2)}</p>
-                      <p>Cost: ₹{item.totalCost.toFixed(2)}</p>
-                      <p
-                        className={
-                          item.profit >= 0 ? "text-green-600" : "text-red-500"
-                        }
-                      >
+                      <h4 className="font-bold text-black">{item.name}</h4>
+                      <p className="text-black">Sold: {item.soldQty}</p>
+                      <p className="text-black">Sales: ₹{item.totalSales.toFixed(2)}</p>
+                      <p className="text-black">Cost: ₹{item.totalCost.toFixed(2)}</p>
+                      <p className="text-black">
                         Profit: ₹{item.profit.toFixed(2)}
                       </p>
                     </div>
@@ -181,10 +173,10 @@ export default function DailyReport({ onBack = () => {}, allMenuItems = [], setC
 // ✅ Reusable Summary Card Component
 function SummaryCard({ title, value, color = "gray" }) {
   const colors = {
-    green: "bg-green-100 text-green-800 border-green-200",
-    red: "bg-red-100 text-red-800 border-red-200",
-    yellow: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    gray: "bg-gray-100 text-gray-800 border-gray-300",
+    green: "bg-green-100 text-black border-green-200",
+    red: "bg-red-100 text-black border-red-200",
+    yellow: "bg-yellow-100 text-black border-yellow-200",
+    gray: "bg-gray-100 text-black border-gray-300",
   };
 
   return (
