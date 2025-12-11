@@ -500,11 +500,11 @@ const menusType = [
   "Dairy Products",
   "Snacks",
   "Fresh Juice",
-  "Juice",
+  "Cool Drinks",
   "Ice Cream",
   "Karupatti Ice Cream",
   "Karupatti Snacks",
-  "Others",
+  "Others Snacks",
   "Biscuits & Cakes", // newly added
   "Parcel",
 ];

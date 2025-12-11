@@ -8,14 +8,15 @@ const menusType = [
   { label: "🥤 Coffee", value: 2 },
   { label: "🥛 Dairy Products", value: 3 },
   { label: "🍪 Snacks", value: 4 },
-  { label: "🫗 Fresh Juice", value: 5 },
-  { label: "🧃 Juice", value: 6 },
-  { label: "🍨 Ice Cream", value: 7 },
-  { label: "🍨 Karupatti Ice Cream", value: 8 },
-  { label: "🍽️ Karupatti Snacks", value: 9 },
-  { label: "🛒 Others", value: 10 },
-  { label: "🍪 Biscuits & Cakes", value: 11 },
-  { label: "📦 Parcel", value: 12 } // new entry
+  { label: "🧃 Evening Special", value: 5 },
+  { label: "🫗 Fresh Juice", value: 6 },
+  { label: "🧃 Cool Drinks", value: 7 },
+  { label: "🍨 Ice Cream", value: 8 },
+  { label: "🍨 Karupatti Ice Cream", value: 9 },
+  { label: "🍽️ Karupatti Snacks", value: 10 },
+  { label: "🛒 Others Snacks", value: 11 },
+  { label: "🍪 Biscuits & Cakes", value: 12 },
+  { label: "📦 Parcel", value: 13 } // new entry
 ];
 
 
