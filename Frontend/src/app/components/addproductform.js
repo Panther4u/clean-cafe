@@ -14,7 +14,7 @@ const menusType = [
   { label: "🍨 Ice Cream", value: 8 },
   { label: "🍨 Karupatti Ice Cream", value: 9 },
   { label: "🍽️ Karupatti Snacks", value: 10 },
-  { label: "🛒 Others Snacks", value: 11 },
+  { label: "🛒 Other Snacks", value: 11 },
   { label: "🍪 Biscuits & Cakes", value: 12 },
   { label: "📦 Parcel", value: 13 } // new entry
 ];
