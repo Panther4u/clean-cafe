@@ -12,7 +12,7 @@
   },
   "data": {
 
-    "_comment_tea_items": "Tea Items",
+   
 
     "1": {
       "amount": 0,
@@ -273,7 +273,7 @@
 
 
 
-    "_comment_coffee_items": "Coffee Items",
+   
 
     "19": {
       "amount": 0,
@@ -477,7 +477,7 @@
 
 
 
-    "_comment_dairy_products": "Dairy Products",
+ 
 
     "33": {
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Milk/Karupatti%20Paal.jpg?updatedAt=1752921276857",
@@ -738,7 +738,7 @@
 
 
 
-   "_comment_snacks_items": "Snacks Items",
+ 
 
     "101": {
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Snacks/Ulunthu%20Vadai%20Image.jpg?updatedAt=1752921271799",
@@ -1026,7 +1026,7 @@
 
 
 
-    "__comment_evening_special": "Evening Special",
+  
 
     "201": {
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Others%20Drinks/Hot%20Badam%20Milk.jpg?updatedAt=1752921275155",
@@ -1090,7 +1090,7 @@
 
 
 
- "_comment_fresh_juice": "Fresh Juice",
+ 
 
     "301": {
       "name": "Apple Juice",
@@ -1476,7 +1476,7 @@
 
 
 
-"comment_cool-drinks": "Cool Drinks",
+
 
     "401": {
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Juice/Sprite%20200ml.jpg?updatedAt=1752921310724",
@@ -2226,7 +2226,7 @@
 
 
 
-"_comment_karupatti-icecream": "Karupatti Ice Cream",
+
 
     "501": {
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Ice%20Cream/Pasumpal%20Mango%20Pot.jpg?updatedAt=1752921295569",
@@ -2350,7 +2350,7 @@
 
 
 
- "comment_karupatti-snacks": "Karupatti Snacks",
+
 
     "601": {
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Thinai%20Laddu.jpg?updatedAt=1752921292348",
@@ -3269,7 +3269,7 @@
 
 
 
- "_comment_Other-snacks": "Other Snacks",
+ 
 
     "701": {
       "name": "Popcorn",
@@ -3362,7 +3362,6 @@
 
 
 
-"comment_Biscuit-Cakes": "Biscuit & Cakes",
 
     "801": {
       "name": "Banana Bun",
@@ -3551,7 +3550,7 @@
 
 
 
-"_comment_Parcel": "Parcel",
+
 
     "901": {
       "name": "Parcel Plain Tea ",
