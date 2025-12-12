@@ -665,7 +665,8 @@ const fetchItems = async () => {
   };
 
   const filteredItems = allItems.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase());
+    const name = item.name.toLowerCase()
+    const matchesSearch = name.includes(searchText.toLowerCase());
     const matchesType = menuCards == 0 || item.type === parseInt(menuCards);
     return searchText.length > 0 ? matchesSearch : matchesType;
   }).map(item => {
