@@ -3697,7 +3697,34 @@
       "id": 813,
       "__collections__": {}
     },
-    
+    "814": {
+      "name": "Pudding Cake",
+      "price": 20,
+      "mrp": 20,
+      "purchaseRate": 15,
+      "type": 12,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Biscuit%20&%20Cakes/Pudding%20Cake.jpg",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 802,
+      "__collections__": {}
+    },
+    "815": {
+      "name": "Plain Cake",
+      "price": 20,
+      "mrp": 20,
+      "purchaseRate": 15,
+      "type": 12,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Biscuit%20&%20Cakes/Plain%20Cake.jpg",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 802,
+      "__collections__": {}
+    },
 
 
 
