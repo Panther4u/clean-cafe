@@ -1031,7 +1031,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 121,
       "__collections__": {}
     },
     "122": {
@@ -1045,7 +1045,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 122,
       "__collections__": {}
     },
     "123": {
@@ -1059,7 +1059,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 123,
       "__collections__": {}
     },
     "124": {
@@ -1073,7 +1073,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 124,
       "__collections__": {}
     },
     "125": {
@@ -1087,7 +1087,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 125,
       "__collections__": {}
     },
     "126": {
@@ -1101,7 +1101,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 126,
       "__collections__": {}
     },
     "127": {
@@ -1115,7 +1115,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 127,
       "__collections__": {}
     },
     "128": {
@@ -1129,7 +1129,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 120,
+      "id": 128,
       "__collections__": {}
     },
 
@@ -2336,7 +2336,7 @@
       "amount": 0,
       "description": "",
       "favorite": false,
-      "id": 453,
+      "id": 454,
       "mrp": 40,
       "name": "Predator EnergtyDrink 300ml",
       "notes": "",
@@ -3398,7 +3398,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 652,
+      "id": 666,
       "__collections__": {}
     },
     "667": {
@@ -3412,7 +3412,7 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 652,
+      "id": 667,
       "__collections__": {}
     },
 
@@ -3708,21 +3708,21 @@
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 802,
+      "id": 814,
       "__collections__": {}
     },
     "815": {
       "name": "Plain Cake",
-      "price": 20,
-      "mrp": 20,
-      "purchaseRate": 15,
+      "price": 17,
+      "mrp": 17,
+      "purchaseRate": 12,
       "type": 12,
       "description": "",
       "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Biscuit%20&%20Cakes/Plain%20Cake.jpg",
       "amount": 0,
       "favorite": false,
       "notes": "",
-      "id": 802,
+      "id": 815,
       "__collections__": {}
     },
 
