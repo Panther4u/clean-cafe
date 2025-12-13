@@ -3387,7 +3387,34 @@
       "id": 665,
       "__collections__": {}
     },
-
+    "666": {
+      "name": "Kachcha Mango candy",
+      "price": 30,
+      "mrp": 30,
+      "purchaseRate": 22.57,
+      "type": 10,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Kachcha%20Mango%20Candy.jpg",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 652,
+      "__collections__": {}
+    },
+    "667": {
+      "name": "Orange candy",
+      "price": 30,
+      "mrp": 30,
+      "purchaseRate": 22.57,
+      "type": 10,
+      "description": "",
+      "imageUrl": "https://ik.imagekit.io/tukyue1p9/Image/Karupatti%20Snacks/Orange%20Candy.jpg",
+      "amount": 0,
+      "favorite": false,
+      "notes": "",
+      "id": 652,
+      "__collections__": {}
+    },
 
 
 
